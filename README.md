@@ -16,6 +16,8 @@ knowledge/
 │   ├── config.yaml
 │   └── config.yaml.bak
 ├── data/                 # Primary data storage
+│   └── wikipedia/        # Wikipedia ZIM files
+│       └── downloads_metadata.json  # Metadata tracking for downloads
 ├── logs/                 # System logs
 ├── requirements.txt      # Project dependencies
 ├── scripts/              # Utility scripts
@@ -31,25 +33,21 @@ knowledge/
     │   ├── __init__.py
     │   ├── config.py
     │   └── logging_setup.py
-    ├── interface/        # User interface components
-    │   └── __init__.py
     ├── metrics/          # Metrics collection
     │   ├── __init__.py
     │   └── prometheus_metrics.py
-    ├── sources/          # Data source connectors
-    │   ├── __init__.py
-    │   └── wikipedia/
-    │       ├── __init__.py
-    │       └── connector.py
-    └── storage/          # Storage management
-        └── __init__.py
+    └── sources/          # Data source connectors
+        ├── __init__.py
+        └── wikipedia/
+            ├── __init__.py
+            └── connector.py
 ```
 
 ## Installation
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/username/knowledge.git
    cd knowledge
    ```
 
@@ -68,20 +66,50 @@ The system can be configured using the files in the `config/` directory:
 - `config.json`: Alternative configuration file (JSON format)
 
 Configuration parameters include:
-- Update schedules
-- Data sources
-- Storage locations
-- Logging levels
-- Metrics collection settings
+- Wikipedia ZIM file pattern and source URL
+- Storage and backup paths
+- Logging settings
+- Metrics collection settings (port, path)
+
+Example configuration (JSON):
+```json
+{
+  "wikipedia": {
+    "zim_source_url": "https://download.kiwix.org/zim/wikipedia/",
+    "file_pattern": "wikipedia_en_all_maxi_[0-9]{4}-[0-9]{2}.zim",
+    "storage_path": "/path/to/knowledge/data/wikipedia",
+    "backup_path": "/path/to/knowledge/backup/wikipedia",
+    "check_interval": 30,
+    "max_backups": 3
+  },
+  "metrics": {
+    "enabled": true,
+    "port": 9091,
+    "path": "/metrics"
+  }
+}
+```
 
 ## Usage
 
 ### Starting the System
 
-To start the knowledge archival system:
+To start the knowledge archival system with default settings:
 
 ```bash
-python src/main.py
+python src/main.py --config config/config.yaml --update-wikipedia
+```
+
+### Command-line Arguments
+
+The application supports the following command-line arguments:
+
+```
+--config PATH             Path to configuration file
+--log-dir PATH            Directory for log files
+--log-level LEVEL         Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+--update-wikipedia        Check for Wikipedia updates and download if available
+--force-download          Force download even if the file exists or is not newer
 ```
 
 ### Manual Updates
@@ -89,10 +117,13 @@ python src/main.py
 You can trigger manual updates using the provided scripts:
 
 ```bash
-# Update from Wikipedia sources
+# Regular update (only newer versions)
 ./scripts/update_wikipedia.sh
 
-# Run scheduled updates
+# Force update (even if you have the latest version)
+./scripts/update_wikipedia.sh --force
+
+# Schedule automatic updates
 ./scripts/schedule_updates.sh
 ```
 
@@ -101,8 +132,21 @@ You can trigger manual updates using the provided scripts:
 ### Automatic Updates
 The system can automatically update its knowledge base from configured sources on a schedule.
 
+### Version Tracking and Metadata
+- Tracks all downloaded versions in a metadata file
+- Only downloads newer versions when they become available
+- Supports forced downloads via command-line flag
+- Maintains version history with timestamps and file sizes
+
 ### Metrics Collection
 Prometheus metrics are integrated from the start as first-class citizens. Key metrics are collected to monitor system performance and usage through the metrics module.
+
+Available metrics include:
+- `wikipedia_check_count`: Number of times Wikipedia update was checked
+- `wikipedia_download_count`: Number of Wikipedia downloads
+- `wikipedia_last_download_size_bytes`: Size of last Wikipedia download in bytes
+- `wikipedia_last_download_time_seconds`: Time taken for last Wikipedia download in seconds
+- `wikipedia_download_failures`: Number of Wikipedia download failures
 
 ### Comprehensive Logging
 All system activities are logged according to configured logging levels in the `logs/` directory.
@@ -116,29 +160,42 @@ The logging system follows our standardized format:
 Each log message is prefixed with the class and method name like: `>>>> ClassName::MethodName Error message`
 
 ### Data Storage
-Knowledge is stored in the `data/` directory with regular backups to the `backup/` directory.
+Knowledge is stored in the `data/` directory with regular backups to the `backup/` directory. The system:
+- Maintains a configurable number of backups
+- Creates timestamped backups before updates
+- Automatically cleans up old backups
 
 ## Metrics
 
-The system uses Prometheus for metrics collection as per our standards. Key metrics include:
-- Update success/failure rates
-- Storage usage
-- Query performance
-- System resource utilization
-
-Metric collection is implemented in the `metrics/prometheus_metrics.py` module.
-
-## Maintenance
-
-### Backups
-Regular backups are stored in the `backup/` directory.
-
-### Updates
-To update the system dependencies:
-
-```bash
-pip install -r requirements.txt --upgrade
+The system exposes Prometheus metrics on port 9091 (configurable). The metrics can be accessed at:
 ```
+http://localhost:9091/metrics
+```
+
+## Wikipedia ZIM Files
+
+This system uses ZIM files from the Kiwix project for Wikipedia content. These files follow a specific naming pattern:
+```
+wikipedia_en_all_maxi_YYYY-MM.zim
+```
+
+The system will automatically:
+1. Check for new versions on the Kiwix server
+2. Compare with locally downloaded versions
+3. Download only if a newer version is available
+4. Maintain metadata about all downloaded versions
+
+## Troubleshooting
+
+### Common Issues
+
+1. **404 Errors**: Check that the file pattern in your configuration matches what's available on the Kiwix server.
+2. **Address Already in Use**: If the Prometheus server fails to start with "Address already in use" errors, change the metrics port in the configuration file.
+3. **Space Issues**: The full Wikipedia ZIM files are very large (>100GB). Ensure you have sufficient disk space.
+
+### Checking Status
+
+To check the status of the system, examine the log files in the `logs/` directory. The JSON metadata file in `data/wikipedia/downloads_metadata.json` provides information about downloaded versions.
 
 ## Development Standards
 
@@ -163,25 +220,6 @@ pip install -r requirements.txt --upgrade
 - PODMAN for containerization (preferred over Docker)
 - Prometheus for metrics
 - Promtail and Loki for log collection
-
-## Troubleshooting
-
-Check the logs in the `logs/` directory for detailed information about any issues.
-
-Common problems:
-1. Connection failures to sources (e.g., Wikipedia API)
-2. Storage space limitations
-3. Configuration errors
-
-## Design Principles
-
-This system follows SOLID principles, with particular emphasis on:
-1. Single Responsibility Principle - Each module has one responsibility
-2. Interface Segregation - Interfaces are client-specific
-3. Low coupling between modules
-4. High cohesion within modules
-
-Design patterns are used only where they add clear value to the codebase.
 
 ## Additional Documentation
 

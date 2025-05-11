@@ -40,6 +40,11 @@ def parse_arguments():
         action="store_true",
         help="Check for Wikipedia updates and download if available"
     )
+    parser.add_argument(
+        "--force-download",
+        action="store_true",
+        help="Force download even if the file exists or is not newer"
+    )
     return parser.parse_args()
 
 
@@ -78,7 +83,7 @@ def main():
         if args.update_wikipedia:
             logger.info(">> Main::main Checking for Wikipedia updates")
             wikipedia_connector = WikipediaConnector(config, metrics_manager)
-            success = wikipedia_connector.update_if_needed()
+            success = wikipedia_connector.update_if_needed(force=args.force_download)
             
             if success:
                 logger.info(">> Main::main Wikipedia update process completed successfully")

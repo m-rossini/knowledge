@@ -1,7 +1,7 @@
 {
   "wikipedia": {
     "zim_source_url": "https://download.kiwix.org/zim/wikipedia/",
-    "file_pattern": "wikipedia_en_all_maxi_*.zim",
+    "file_pattern": "wikipedia_en_all_maxi_[0-9]{4}-[0-9]{2}.zim",
     "storage_path": "/home/rossini/projetos/knowledge/data/wikipedia",
     "backup_path": "/home/rossini/projetos/knowledge/backup/wikipedia",
     "check_interval": 30,
@@ -15,7 +15,7 @@
   },
   "metrics": {
     "enabled": true,
-    "port": 9090,
+    "port": 9091,
     "path": "/metrics"
   }
 }

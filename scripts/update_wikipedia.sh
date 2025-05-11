@@ -13,8 +13,10 @@ NC='\033[0m' # No Color
 set -e
 
 # Configuration
-CONFIG_FILE="config/config.json"
-LOG_DIR="logs"
+PROJECT_ROOT="/home/rossini/projetos/knowledge"
+CONFIG_FILE="${PROJECT_ROOT}/config/config.json"
+LOG_DIR="${PROJECT_ROOT}/logs"
+FORCE_DOWNLOAD=false
 
 # Functions
 function log_info() {
@@ -27,6 +29,23 @@ function log_warn() {
 
 function log_error() {
     echo -e "${RED}>>>> ShellScript::${FUNCNAME[1]} $1${NC}"
+}
+
+function parse_arguments() {
+    # Parse command line arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --force|-f)
+                FORCE_DOWNLOAD=true
+                log_info "Force download enabled"
+                shift
+                ;;
+            *)
+                log_warn "Unknown option: $1"
+                shift
+                ;;
+        esac
+    done
 }
 
 function check_dependencies() {
@@ -50,15 +69,22 @@ function create_directories() {
     
     # Create directories if they don't exist
     mkdir -p "${LOG_DIR}"
-    mkdir -p "data/wikipedia"
-    mkdir -p "backup/wikipedia"
+    mkdir -p "${PROJECT_ROOT}/data/wikipedia"
+    mkdir -p "${PROJECT_ROOT}/backup/wikipedia"
 }
 
 function run_update() {
     log_info "Running Wikipedia update check"
     
-    # Run the Python application (Wikipedia update is now the default behavior)
-    python3 src/main.py --config "${CONFIG_FILE}" --log-dir "${LOG_DIR}"
+    # Build command with or without force download flag
+    local cmd="cd \"${PROJECT_ROOT}\" && PYTHONPATH=\"${PROJECT_ROOT}\" python3 \"${PROJECT_ROOT}/src/main.py\" --config \"${CONFIG_FILE}\" --log-dir \"${LOG_DIR}\" --update-wikipedia"
+    
+    if [ "${FORCE_DOWNLOAD}" = true ]; then
+        cmd="${cmd} --force-download"
+    fi
+    
+    # Run the Python application with update-wikipedia flag
+    eval "${cmd}"
     
     if [ $? -ne 0 ]; then
         log_error "Wikipedia update failed"
@@ -73,9 +99,8 @@ function run_update() {
 function main() {
     log_info "Starting Wikipedia update process"
     
-    # Make sure we're in the project root directory
-    SCRIPT_DIR=$(dirname "$0")
-    cd "${SCRIPT_DIR}/.." || exit 1
+    # Parse command line arguments
+    parse_arguments "$@"
     
     # Run the update process
     check_dependencies
@@ -91,5 +116,5 @@ function main() {
     fi
 }
 
-# Call the main function
-main
+# Call the main function with all arguments
+main "$@"
