@@ -1,0 +1,21 @@
+{
+  "wikipedia": {
+    "zim_source_url": "https://download.kiwix.org/zim/wikipedia/",
+    "file_pattern": "wikipedia_en_all_maxi_*.zim",
+    "storage_path": "/home/rossini/projetos/knowledge/data/wikipedia",
+    "backup_path": "/home/rossini/projetos/knowledge/backup/wikipedia",
+    "check_interval": 30,
+    "max_backups": 3
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "/home/rossini/projetos/knowledge/logs/wikipedia.log",
+    "max_size_mb": 10,
+    "backup_count": 5
+  },
+  "metrics": {
+    "enabled": true,
+    "port": 9090,
+    "path": "/metrics"
+  }
+}
