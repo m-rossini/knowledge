@@ -13,7 +13,7 @@ NC='\033[0m' # No Color
 set -e
 
 # Configuration
-PROJECT_ROOT="/home/rossini/projetos/knowledge"
+PROJECT_ROOT="${HOME}/projetos/knowledge"
 CONFIG_FILE="${PROJECT_ROOT}/config/config.json"
 LOG_DIR="${PROJECT_ROOT}/logs"
 FORCE_DOWNLOAD=false
