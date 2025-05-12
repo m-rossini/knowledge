@@ -14,34 +14,67 @@ knowledge/
 ├── config/               # Configuration files
 │   ├── config.json
 │   ├── config.yaml
-│   └── config.yaml.bak
+├── container/            # Container-related files
+│   ├── container_schedule_updates.sh
+│   ├── container_update_wikipedia.sh
+│   ├── Dockerfile
+│   └── run_knowledge_container.sh
 ├── data/                 # Primary data storage
 │   └── wikipedia/        # Wikipedia ZIM files
-│       └── downloads_metadata.json  # Metadata tracking for downloads
 ├── logs/                 # System logs
 ├── requirements.txt      # Project dependencies
 ├── scripts/              # Utility scripts
 │   ├── schedule_updates.sh
 │   └── update_wikipedia.sh
 ├── specs/                # Specification documents
-│   ├── 0010-main.md
-│   └── 0020-Wikipedia.md
 └── src/                  # Source code
-    ├── __init__.py
     ├── main.py           # Main application entry point
     ├── core/             # Core functionality
-    │   ├── __init__.py
-    │   ├── config.py
-    │   └── logging_setup.py
+    │   ├── application_manager.py  # Application lifecycle manager
+    │   ├── command_executor.py     # Command execution
+    │   ├── config.py               # Configuration management
+    │   └── logging_setup.py        # Logging configuration
     ├── metrics/          # Metrics collection
-    │   ├── __init__.py
     │   └── prometheus_metrics.py
     └── sources/          # Data source connectors
-        ├── __init__.py
-        └── wikipedia/
-            ├── __init__.py
-            └── connector.py
+        ├── interfaces/   # Source connector interfaces
+        │   ├── backup_manager.py
+        │   ├── download_manager.py
+        │   ├── metadata_manager.py
+        │   ├── source_connector.py
+        │   └── verification_service.py
+        └── wikipedia/    # Wikipedia-specific implementations
+            ├── connector.py
+            ├── wikipedia_factory.py
+            └── implementations/
+                ├── wikipedia_backup_manager.py
+                ├── wikipedia_download_manager.py
+                ├── wikipedia_metadata_manager.py
+                └── wikipedia_verification_service.py
 ```
+
+## Architecture
+
+The system is designed following SOLID principles:
+
+1. **Single Responsibility Principle (SRP)**: Each class has a single responsibility
+2. **Open/Closed Principle (OCP)**: Components are open for extension but closed for modification
+3. **Liskov Substitution Principle (LSP)**: Interface implementations can be substituted without affecting behavior
+4. **Interface Segregation Principle (ISP)**: Clients only depend on interfaces they use
+5. **Dependency Inversion Principle (DIP)**: High-level modules depend on abstractions, not implementations
+
+### Key Components
+
+- **ApplicationManager**: Manages application lifecycle (initialization, configuration, command routing)
+- **CommandExecutor**: Executes specific commands requested by the user
+- **Source Connectors**: Interface-based design with specific implementations for each knowledge source
+  - **ISourceConnector**: Base interface for all knowledge source connectors
+  - **IMetadataManager**: Interface for metadata operations
+  - **IDownloadManager**: Interface for downloading operations
+  - **IBackupManager**: Interface for backup operations
+  - **IVerificationService**: Interface for verification operations
+
+Each knowledge source implements these interfaces with source-specific logic, allowing for multiple knowledge sources with consistent behavior.
 
 ## Installation
 
@@ -127,7 +160,115 @@ You can trigger manual updates using the provided scripts:
 ./scripts/schedule_updates.sh
 ```
 
+## Container Support
+
+The system is designed to run in a container environment using Podman (preferred over Docker). The container setup provides isolated execution with data persistence through volumes.
+
+### Container Structure
+
+```
+container/
+├── Dockerfile                     # Container definition
+├── run_knowledge_container.sh     # Script to run the container
+├── container_update_wikipedia.sh  # Script to trigger Wikipedia updates
+└── container_schedule_updates.sh  # Script for scheduled updates
+```
+
+### Dockerfile Details
+
+The Dockerfile includes:
+- Python 3.13 slim base image
+- Required system dependencies including libzim-dev
+- Volume mounts for data, logs, backups, and config
+- Exposed port 9091 for Prometheus metrics
+- Proper environment variable configuration
+- Standardized logging format matching our Python standards
+
+### Container Management
+
+To work with the containerized application:
+
+```bash
+# Build the container
+podman build -t knowledge-project:latest -f container/Dockerfile .
+
+# Run the container with default settings
+./container/run_knowledge_container.sh
+
+# Run with custom metrics port
+./container/run_knowledge_container.sh --metrics-port 9095
+
+# View container logs
+podman logs knowledge-container
+
+# Stop the container
+podman stop knowledge-container
+```
+
+The `run_knowledge_container.sh` script provides:
+- Automatic detection of existing containers
+- Interactive prompts for stopping/removing existing containers
+- Volume mounting for persistent data
+- Metrics port configuration
+- Comprehensive error handling and logging
+- Dependency verification
+
+### Container Update Scripts
+
+```bash
+# Trigger a Wikipedia update in the container
+./container/container_update_wikipedia.sh
+
+# Force an update regardless of version
+./container/container_update_wikipedia.sh --force
+
+# Set up scheduled updates in the container
+./container/container_schedule_updates.sh
+```
+
+## Scripts
+
+The system includes several utility scripts to manage operations:
+
+### Local Scripts
+
+```
+scripts/
+├── update_wikipedia.sh    # Updates Wikipedia data
+└── schedule_updates.sh    # Sets up scheduled updates
+```
+
+These scripts follow our Shell Script Standards:
+- Clear color-coded log messages (green for info, yellow for warnings, red for errors)
+- Consistent logging format matching Python standards ('>>' for info, etc.)
+- Proper error handling
+- Command-line argument parsing
+- Small, focused functions
+
+### Usage Examples
+
+```bash
+# Update Wikipedia data
+./scripts/update_wikipedia.sh
+
+# Force download even if you have the latest version
+./scripts/update_wikipedia.sh --force
+
+# Schedule automatic updates (creates a cron job)
+./scripts/schedule_updates.sh --interval daily
+
+# Remove scheduled updates
+./scripts/schedule_updates.sh --remove
+```
+
 ## Features
+
+### Extensible Architecture
+The system uses interface-based design, making it easy to add new knowledge sources beyond Wikipedia:
+
+1. Implement the required interfaces for your new knowledge source
+2. Add the source to the CommandExecutor's update_knowledge_source method
+3. Update the command-line arguments to include the new source
 
 ### Automatic Updates
 The system can automatically update its knowledge base from configured sources on a schedule.
@@ -220,6 +361,16 @@ To check the status of the system, examine the log files in the `logs/` director
 - PODMAN for containerization (preferred over Docker)
 - Prometheus for metrics
 - Promtail and Loki for log collection
+
+## Extending the System
+
+To add a new knowledge source (e.g., Project Gutenberg):
+
+1. Create a new directory structure in `src/sources/gutenberg/`
+2. Implement the interfaces defined in `src/sources/interfaces/`
+3. Create a factory class similar to `WikipediaFactory`
+4. Update the `CommandExecutor.update_knowledge_source()` method to handle the new source type
+5. Add command-line arguments to `main.py` for the new source
 
 ## Additional Documentation
 
