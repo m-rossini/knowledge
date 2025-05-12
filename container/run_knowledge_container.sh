@@ -63,7 +63,7 @@ function check_dependencies() {
     
     # Check if image exists
     if ! podman image exists "${IMAGE_NAME}"; then
-        log_error "Image ${IMAGE_NAME} does not exist. Please build it first with: podman build -t ${IMAGE_NAME} -f ${PROJECT_ROOT}/docker/Dockerfile ${PROJECT_ROOT}"
+        log_error "Image ${IMAGE_NAME} does not exist. Please build it first with: podman build -t ${IMAGE_NAME} -f ${PROJECT_ROOT}/container/Dockerfile ${PROJECT_ROOT}"
         exit 1
     fi
 }
