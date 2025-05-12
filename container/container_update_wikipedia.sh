@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 #
-# docker_update_wikipedia.sh - Runs the update_wikipedia.sh script inside the container
+# container_update_wikipedia.sh - Runs the update_wikipedia.sh script inside the container
 #
 
 # Colors for terminal output
@@ -31,7 +31,7 @@ function check_container() {
     # Check if container exists and is running
     if ! podman ps --format "{{.Names}}" | grep -q "^${CONTAINER_NAME}$"; then
         log_error "Container ${CONTAINER_NAME} is not running"
-        echo "Please start the container first with: ./docker/run_knowledge_container.sh"
+        echo "Please start the container first with: ./container/run_knowledge_container.sh"
         exit 1
     fi
 }
