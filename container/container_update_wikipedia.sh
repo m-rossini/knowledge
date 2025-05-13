@@ -37,17 +37,17 @@ function check_container() {
 }
 
 function run_update_script() {
-    log_info "Running update_wikipedia.sh in container"
+    log_info "Running container-compatible update script in container"
     
-    # Pass all arguments to the script inside the container
-    podman exec "${CONTAINER_NAME}" sh -c "cd /app && ./scripts/update_wikipedia.sh $*"
+    # Pass all arguments to the container-compatible script inside the container
+    podman exec "${CONTAINER_NAME}" sh -c "cd /app && ./container/container_update_script.sh $*"
     
     if [ $? -ne 0 ]; then
-        log_error "Failed to run update_wikipedia.sh in container"
+        log_error "Failed to run update script in container"
         return 1
     fi
     
-    log_info "update_wikipedia.sh completed successfully"
+    log_info "Update script completed successfully"
     return 0
 }
 

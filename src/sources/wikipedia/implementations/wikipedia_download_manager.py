@@ -190,6 +190,8 @@ class WikipediaDownloadManager(IDownloadManager):
         temp_file_path = f"{local_file_path}.downloading"
         
         self.logger.info(">> WikipediaDownloadManager::download_file Starting download from %s", url)
+        self.logger.info(">> WikipediaDownloadManager::download_file Using temporary file path: %s", temp_file_path)
+        self.logger.info(">> WikipediaDownloadManager::download_file Final destination path: %s", local_file_path)
         
         # Track download time for metrics
         start_time = time.time()
@@ -220,6 +222,7 @@ class WikipediaDownloadManager(IDownloadManager):
             # Move the temp file to the final location
             if os.path.exists(temp_file_path):
                 os.rename(temp_file_path, local_file_path)
+                self.logger.info(">> WikipediaDownloadManager::download_file Renamed temporary file to final path: %s", local_file_path)
                 
                 # Update metrics
                 download_time = time.time() - start_time
@@ -249,6 +252,7 @@ class WikipediaDownloadManager(IDownloadManager):
             # Clean up temp file if it exists
             if os.path.exists(temp_file_path):
                 os.remove(temp_file_path)
+                self.logger.info(">> WikipediaDownloadManager::download_file Cleaned up temporary file: %s", temp_file_path)
             
             # Update failure metric
             if self.download_failures_metric:
