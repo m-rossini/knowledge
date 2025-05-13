@@ -101,10 +101,10 @@ function run_container() {
     # Run the container with volume mounts
     podman run -d \
         --name "${CONTAINER_NAME}" \
-        -v "${PROJECT_ROOT}/data:/app/data:z" \
-        -v "${PROJECT_ROOT}/logs:/app/logs:z" \
-        -v "${PROJECT_ROOT}/backup:/app/backup:z" \
-        -v "${PROJECT_ROOT}/config:/app/config:z" \
+        -v "${PROJECT_ROOT}/data:/app/data:Z" \
+        -v "${PROJECT_ROOT}/logs:/app/logs:Z" \
+        -v "${PROJECT_ROOT}/backup:/app/backup:Z" \
+        -v "${PROJECT_ROOT}/config:/app/config:Z" \
         -p "${METRICS_PORT}:9091" \
         "${IMAGE_NAME}"
     
