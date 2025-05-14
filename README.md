@@ -11,14 +11,12 @@ This knowledge archival system is designed to collect, store, and manage informa
 ```
 knowledge/
 ├── backup/               # Backup storage for archived data
+│   └── wikipedia/        # Wikipedia backup files
 ├── config/               # Configuration files
-│   ├── config.json
-│   ├── config.yaml
+│   └── config.json       # Primary configuration file
 ├── container/            # Container-related files
-│   ├── container_schedule_updates.sh
-│   ├── container_update_wikipedia.sh
-│   ├── Dockerfile
-│   └── run_knowledge_container.sh
+│   ├── Dockerfile        # Container definition
+│   └── run_knowledge_container.sh  # Script to run the container
 ├── data/                 # Primary data storage
 │   └── wikipedia/        # Wikipedia ZIM files
 ├── logs/                 # System logs
@@ -169,20 +167,8 @@ The system is designed to run in a container environment using Podman (preferred
 ```
 container/
 ├── Dockerfile                     # Container definition
-├── run_knowledge_container.sh     # Script to run the container
-├── container_update_wikipedia.sh  # Script to trigger Wikipedia updates
-└── container_schedule_updates.sh  # Script for scheduled updates
+└── run_knowledge_container.sh     # Script to run the container
 ```
-
-### Dockerfile Details
-
-The Dockerfile includes:
-- Python 3.13 slim base image
-- Required system dependencies including libzim-dev
-- Volume mounts for data, logs, backups, and config
-- Exposed port 9091 for Prometheus metrics
-- Proper environment variable configuration
-- Standardized logging format matching our Python standards
 
 ### Container Management
 
@@ -195,8 +181,11 @@ podman build -t knowledge-project:latest -f container/Dockerfile .
 # Run the container with default settings
 ./container/run_knowledge_container.sh
 
-# Run with custom metrics port
-./container/run_knowledge_container.sh --metrics-port 9095
+# Run with restart flag (removes existing container if it exists)
+./container/run_knowledge_container.sh --restart
+
+# Run with force download flag 
+./container/run_knowledge_container.sh --force
 
 # View container logs
 podman logs knowledge-container
@@ -210,21 +199,9 @@ The `run_knowledge_container.sh` script provides:
 - Interactive prompts for stopping/removing existing containers
 - Volume mounting for persistent data
 - Metrics port configuration
+- BASE_PATH environment variable setting
 - Comprehensive error handling and logging
 - Dependency verification
-
-### Container Update Scripts
-
-```bash
-# Trigger a Wikipedia update in the container
-./container/container_update_wikipedia.sh
-
-# Force an update regardless of version
-./container/container_update_wikipedia.sh --force
-
-# Set up scheduled updates in the container
-./container/container_schedule_updates.sh
-```
 
 ## Scripts
 
