@@ -30,6 +30,9 @@ function log_error() {
 
 function parse_arguments() {
     # Parse command line arguments
+    CONTAINER_ARGS=()
+    RESTART_FLAG=false
+    
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --metrics-port)
@@ -37,15 +40,28 @@ function parse_arguments() {
                 log_info "Using custom metrics endpoint port: $METRICS_PORT"
                 shift 2
                 ;;
+            --restart)
+                log_info "Restart flag enabled - will restart container if it exists"
+                RESTART_FLAG=true
+                shift
+                ;;
+            --force|-f)
+                log_info "Force download option will be passed to container"
+                CONTAINER_ARGS+=("--force")
+                shift
+                ;;
             --help|-h)
                 echo "Usage: $0 [options]"
                 echo "Options:"
                 echo "  --metrics-port PORT     Set custom port for metrics endpoint (default: 9091)"
+                echo "  --restart               Restart container if it exists (without this flag, exits if container exists)"
+                echo "  --force, -f             Force download even if version exists"
                 echo "  --help, -h              Show this help message"
                 exit 0
                 ;;
             *)
-                log_warn "Unknown option: $1"
+                log_info "Passing additional argument to container: $1"
+                CONTAINER_ARGS+=("$1")
                 shift
                 ;;
         esac
@@ -71,42 +87,58 @@ function check_dependencies() {
 function check_existing_container() {
     log_info "Checking for existing container"
     
-    # Check if container already exists and is running
+    # Check if container already exists (regardless of state)
     if podman container exists "${CONTAINER_NAME}" &> /dev/null; then
-        if podman ps --format "{{.Names}}" | grep -q "^${CONTAINER_NAME}$"; then
-            log_warn "Container ${CONTAINER_NAME} is already running"
-            read -p "Do you want to stop and remove it? (y/n): " -r REPLY
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
+        # Container exists (running or stopped)
+        if [ "$RESTART_FLAG" = true ]; then
+            # If container is running, stop it first
+            if podman ps --format "{{.Names}}" | grep -q "^${CONTAINER_NAME}$"; then
+                log_warn "Container ${CONTAINER_NAME} is running - will stop and remove it due to --restart flag"
                 podman stop "${CONTAINER_NAME}"
-                podman rm "${CONTAINER_NAME}"
-                log_info "Container ${CONTAINER_NAME} stopped and removed"
             else
-                log_info "Exiting without starting a new container"
-                exit 0
+                log_warn "Container ${CONTAINER_NAME} exists but is not running - will remove it due to --restart flag"
             fi
+            
+            # Remove the container
+            podman rm "${CONTAINER_NAME}"
+            log_info "Container ${CONTAINER_NAME} removed"
         else
-            log_warn "Container ${CONTAINER_NAME} exists but is not running"
-            read -p "Do you want to remove it? (y/n): " -r REPLY
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                podman rm "${CONTAINER_NAME}"
-                log_info "Container ${CONTAINER_NAME} removed"
-            fi
+            # No restart flag, exit with warning
+            log_warn "Container ${CONTAINER_NAME} already exists (running or stopped)"
+            log_warn "Use --restart flag to remove the existing container and create a new one"
+            log_info "Exiting without starting a new container"
+            exit 0
         fi
+    else
+        # No existing container, --restart flag has no effect
+        log_info "No existing container found"
     fi
 }
 
 function run_container() {
     log_info "Starting container ${CONTAINER_NAME}"
     
-    # Run the container with volume mounts
-    podman run -d \
-        --name "${CONTAINER_NAME}" \
-        -v "${PROJECT_ROOT}/data:/app/data:Z" \
-        -v "${PROJECT_ROOT}/logs:/app/logs:Z" \
-        -v "${PROJECT_ROOT}/backup:/app/backup:Z" \
-        -v "${PROJECT_ROOT}/config:/app/config:Z" \
-        -p "${METRICS_PORT}:9091" \
-        "${IMAGE_NAME}"
+    # Command to run the container with additional arguments
+    container_cmd="podman run -d \
+        --name \"${CONTAINER_NAME}\" \
+        -v \"${PROJECT_ROOT}/data:/app/data:Z\" \
+        -v \"${PROJECT_ROOT}/logs:/app/logs:Z\" \
+        -v \"${PROJECT_ROOT}/backup:/app/backup:Z\" \
+        -v \"${PROJECT_ROOT}/config:/app/config:Z\" \
+        -p \"${METRICS_PORT}:9091\" \
+        -e \"BASE_PATH=/app\" \
+        \"${IMAGE_NAME}\""
+    
+    # Add any additional arguments to pass to the entrypoint
+    if [[ ${#CONTAINER_ARGS[@]} -gt 0 ]]; then
+        log_info "Passing arguments to container entrypoint: ${CONTAINER_ARGS[*]}"
+        for arg in "${CONTAINER_ARGS[@]}"; do
+            container_cmd+=" \"$arg\""
+        done
+    fi
+    
+    # Execute the container command
+    eval ${container_cmd}
     
     if [ $? -ne 0 ]; then
         log_error "Failed to start container"

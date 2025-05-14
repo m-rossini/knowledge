@@ -11,20 +11,17 @@ This knowledge archival system is designed to collect, store, and manage informa
 ```
 knowledge/
 ├── backup/               # Backup storage for archived data
+│   └── wikipedia/        # Wikipedia backup files
 ├── config/               # Configuration files
-│   ├── config.json
-│   ├── config.yaml
+│   └── config.json       # Primary configuration file
 ├── container/            # Container-related files
-│   ├── container_schedule_updates.sh
-│   ├── container_update_wikipedia.sh
-│   ├── Dockerfile
-│   └── run_knowledge_container.sh
+│   ├── Dockerfile        # Container definition
+│   └── run_knowledge_container.sh  # Script to run the container
 ├── data/                 # Primary data storage
 │   └── wikipedia/        # Wikipedia ZIM files
 ├── logs/                 # System logs
 ├── requirements.txt      # Project dependencies
 ├── scripts/              # Utility scripts
-│   ├── schedule_updates.sh
 │   └── update_wikipedia.sh
 ├── specs/                # Specification documents
 └── src/                  # Source code
@@ -147,7 +144,7 @@ The application supports the following command-line arguments:
 
 ### Manual Updates
 
-You can trigger manual updates using the provided scripts:
+You can trigger manual updates using the update_wikipedia.sh script:
 
 ```bash
 # Regular update (only newer versions)
@@ -155,10 +152,21 @@ You can trigger manual updates using the provided scripts:
 
 # Force update (even if you have the latest version)
 ./scripts/update_wikipedia.sh --force
-
-# Schedule automatic updates
-./scripts/schedule_updates.sh
 ```
+
+### Scheduled Updates
+
+The system uses standard Linux crontab for scheduling regular updates:
+
+```bash
+# Example crontab entry for weekly updates (Sundays at midnight)
+0 0 * * 0 cd /path/to/knowledge && ./container/run_knowledge_container.sh --restart >> /path/to/knowledge/logs/cron_container_update.log 2>&1
+```
+
+To schedule updates:
+1. Edit your crontab: `crontab -e`
+2. Add an entry similar to the example above
+3. Customize timing using standard cron format
 
 ## Container Support
 
@@ -169,20 +177,8 @@ The system is designed to run in a container environment using Podman (preferred
 ```
 container/
 ├── Dockerfile                     # Container definition
-├── run_knowledge_container.sh     # Script to run the container
-├── container_update_wikipedia.sh  # Script to trigger Wikipedia updates
-└── container_schedule_updates.sh  # Script for scheduled updates
+└── run_knowledge_container.sh     # Script to run the container
 ```
-
-### Dockerfile Details
-
-The Dockerfile includes:
-- Python 3.13 slim base image
-- Required system dependencies including libzim-dev
-- Volume mounts for data, logs, backups, and config
-- Exposed port 9091 for Prometheus metrics
-- Proper environment variable configuration
-- Standardized logging format matching our Python standards
 
 ### Container Management
 
@@ -195,8 +191,11 @@ podman build -t knowledge-project:latest -f container/Dockerfile .
 # Run the container with default settings
 ./container/run_knowledge_container.sh
 
-# Run with custom metrics port
-./container/run_knowledge_container.sh --metrics-port 9095
+# Run with restart flag (removes existing container if it exists)
+./container/run_knowledge_container.sh --restart
+
+# Run with force download flag 
+./container/run_knowledge_container.sh --force
 
 # View container logs
 podman logs knowledge-container
@@ -210,21 +209,9 @@ The `run_knowledge_container.sh` script provides:
 - Interactive prompts for stopping/removing existing containers
 - Volume mounting for persistent data
 - Metrics port configuration
+- BASE_PATH environment variable setting
 - Comprehensive error handling and logging
 - Dependency verification
-
-### Container Update Scripts
-
-```bash
-# Trigger a Wikipedia update in the container
-./container/container_update_wikipedia.sh
-
-# Force an update regardless of version
-./container/container_update_wikipedia.sh --force
-
-# Set up scheduled updates in the container
-./container/container_schedule_updates.sh
-```
 
 ## Scripts
 
@@ -235,7 +222,6 @@ The system includes several utility scripts to manage operations:
 ```
 scripts/
 ├── update_wikipedia.sh    # Updates Wikipedia data
-└── schedule_updates.sh    # Sets up scheduled updates
 ```
 
 These scripts follow our Shell Script Standards:
@@ -253,12 +239,6 @@ These scripts follow our Shell Script Standards:
 
 # Force download even if you have the latest version
 ./scripts/update_wikipedia.sh --force
-
-# Schedule automatic updates (creates a cron job)
-./scripts/schedule_updates.sh --interval daily
-
-# Remove scheduled updates
-./scripts/schedule_updates.sh --remove
 ```
 
 ## Features
