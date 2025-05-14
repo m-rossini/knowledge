@@ -2,14 +2,14 @@
   "wikipedia": {
     "zim_source_url": "https://download.kiwix.org/zim/wikipedia/",
     "file_pattern": "wikipedia_en_all_maxi_[0-9]{4}-[0-9]{2}.zim",
-      "storage_path": "/app/data/wikipedia",
-    "backup_path": "/app/backup/wikipedia",
+    "storage_path": "${BASE_PATH}/data/wikipedia",
+    "backup_path": "${BASE_PATH}/backup/wikipedia",
     "check_interval": 30,
     "max_backups": 3
   },
   "logging": {
     "level": "INFO",
-    "file": "/app/logs/wikipedia.log",                                                                                                          
+    "file": "${BASE_PATH}/logs/wikipedia.log",
     "max_size_mb": 10,
     "backup_count": 5
   },

@@ -9,9 +9,17 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-# Configuration
-UPDATE_SCRIPT="./scripts/update_wikipedia.sh"
-CRON_JOB="0 0 * * 0 cd $(pwd) && ${UPDATE_SCRIPT} >> logs/cron_wikipedia_update.log 2>&1"
+# Configuration - use BASE_PATH from environment or set default
+if [ -z "${BASE_PATH}" ]; then
+    # BASE_PATH not provided, use default
+    export BASE_PATH="$(pwd)"
+    log_info "Using current directory as BASE_PATH: ${BASE_PATH}"
+else
+    log_info "Using provided BASE_PATH: ${BASE_PATH}"
+fi
+
+UPDATE_SCRIPT="${BASE_PATH}/scripts/update_wikipedia.sh"
+CRON_JOB="0 0 * * 0 cd ${BASE_PATH} && ${UPDATE_SCRIPT} >> ${BASE_PATH}/logs/cron_wikipedia_update.log 2>&1"
 
 # Functions
 function log_info() {

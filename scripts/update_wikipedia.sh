@@ -12,12 +12,6 @@ NC='\033[0m' # No Color
 # Set error handling
 set -e
 
-# Configuration
-PROJECT_ROOT="${HOME}/projetos/knowledge"
-CONFIG_FILE="${PROJECT_ROOT}/config/config.json"
-LOG_DIR="${PROJECT_ROOT}/logs"
-FORCE_DOWNLOAD=false
-
 # Functions
 function log_info() {
     echo -e "${GREEN}>> ShellScript::${FUNCNAME[1]} $1${NC}"
@@ -31,6 +25,20 @@ function log_error() {
     echo -e "${RED}>>>> ShellScript::${FUNCNAME[1]} $1${NC}"
 }
 
+# Configuration - use BASE_PATH from environment or set default
+if [ -z "${BASE_PATH}" ]; then
+    # BASE_PATH not provided, use default
+    export BASE_PATH="${HOME}/projetos/knowledge"
+    log_info "Using default BASE_PATH: ${BASE_PATH}"
+else
+    log_info "Using provided BASE_PATH: ${BASE_PATH}"
+fi
+
+CONFIG_FILE="${BASE_PATH}/config/config.json"
+LOG_DIR="${BASE_PATH}/logs"
+FORCE_DOWNLOAD=false
+
+# Functions
 function parse_arguments() {
     # Parse command line arguments
     while [[ $# -gt 0 ]]; do
@@ -69,15 +77,15 @@ function create_directories() {
     
     # Create directories if they don't exist
     mkdir -p "${LOG_DIR}"
-    mkdir -p "${PROJECT_ROOT}/data/wikipedia"
-    mkdir -p "${PROJECT_ROOT}/backup/wikipedia"
+    mkdir -p "${BASE_PATH}/data/wikipedia"
+    mkdir -p "${BASE_PATH}/backup/wikipedia"
 }
 
 function run_update() {
     log_info "Running Wikipedia update check"
     
     # Build command with or without force download flag
-    local cmd="cd \"${PROJECT_ROOT}\" && PYTHONPATH=\"${PROJECT_ROOT}\" python3 \"${PROJECT_ROOT}/src/main.py\" --config \"${CONFIG_FILE}\" --log-dir \"${LOG_DIR}\" --update-wikipedia"
+    local cmd="cd \"${BASE_PATH}\" && PYTHONPATH=\"${BASE_PATH}\" python3 \"${BASE_PATH}/src/main.py\" --config \"${CONFIG_FILE}\" --log-dir \"${LOG_DIR}\" --update-wikipedia"
     
     if [ "${FORCE_DOWNLOAD}" = true ]; then
         cmd="${cmd} --force-download"

@@ -126,6 +126,7 @@ function run_container() {
         -v \"${PROJECT_ROOT}/backup:/app/backup:Z\" \
         -v \"${PROJECT_ROOT}/config:/app/config:Z\" \
         -p \"${METRICS_PORT}:9091\" \
+        -e \"BASE_PATH=/app\" \
         \"${IMAGE_NAME}\""
     
     # Add any additional arguments to pass to the entrypoint
