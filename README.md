@@ -22,7 +22,6 @@ knowledge/
 ├── logs/                 # System logs
 ├── requirements.txt      # Project dependencies
 ├── scripts/              # Utility scripts
-│   ├── schedule_updates.sh
 │   └── update_wikipedia.sh
 ├── specs/                # Specification documents
 └── src/                  # Source code
@@ -223,7 +222,6 @@ The system includes several utility scripts to manage operations:
 ```
 scripts/
 ├── update_wikipedia.sh    # Updates Wikipedia data
-└── schedule_updates.sh    # Sets up scheduled updates
 ```
 
 These scripts follow our Shell Script Standards:
