@@ -145,7 +145,7 @@ The application supports the following command-line arguments:
 
 ### Manual Updates
 
-You can trigger manual updates using the provided scripts:
+You can trigger manual updates using the update_wikipedia.sh script:
 
 ```bash
 # Regular update (only newer versions)
@@ -153,10 +153,21 @@ You can trigger manual updates using the provided scripts:
 
 # Force update (even if you have the latest version)
 ./scripts/update_wikipedia.sh --force
-
-# Schedule automatic updates
-./scripts/schedule_updates.sh
 ```
+
+### Scheduled Updates
+
+The system uses standard Linux crontab for scheduling regular updates:
+
+```bash
+# Example crontab entry for weekly updates (Sundays at midnight)
+0 0 * * 0 cd /path/to/knowledge && ./container/run_knowledge_container.sh --restart >> /path/to/knowledge/logs/cron_container_update.log 2>&1
+```
+
+To schedule updates:
+1. Edit your crontab: `crontab -e`
+2. Add an entry similar to the example above
+3. Customize timing using standard cron format
 
 ## Container Support
 
@@ -230,12 +241,6 @@ These scripts follow our Shell Script Standards:
 
 # Force download even if you have the latest version
 ./scripts/update_wikipedia.sh --force
-
-# Schedule automatic updates (creates a cron job)
-./scripts/schedule_updates.sh --interval daily
-
-# Remove scheduled updates
-./scripts/schedule_updates.sh --remove
 ```
 
 ## Features
