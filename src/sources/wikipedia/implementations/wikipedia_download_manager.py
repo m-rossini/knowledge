@@ -213,10 +213,30 @@ class WikipediaDownloadManager(IDownloadManager):
                             
                             # Log progress every 100MB
                             if downloaded % (100 * chunk_size) == 0:
+                                # Calculate elapsed time
+                                elapsed_time = time.time() - start_time
+                                
+                                # Calculate download rate (bytes per second)
+                                download_rate = downloaded / elapsed_time if elapsed_time > 0 else 0
+                                
+                                # Calculate ETA (estimated time of arrival) in seconds
+                                remaining_bytes = file_size - downloaded
+                                eta_seconds = remaining_bytes / download_rate if download_rate > 0 else 0
+                                
+                                # Format elapsed time and ETA for display (HH:MM:SS)
+                                elapsed_str = self._format_time_hms(elapsed_time)
+                                eta_str = self._format_time_hms(eta_seconds)
+                                
                                 percent = (downloaded / file_size) * 100 if file_size else 0
+                                
                                 self.logger.info(
-                                    ">> WikipediaDownloadManager::download_file Downloaded %.2f%% (%d MB / %d MB)",
-                                    percent, downloaded / (1024 * 1024), file_size / (1024 * 1024)
+                                    ">> WikipediaDownloadManager::download_file Downloaded %.2f%% (%d MB / %d MB) | Elapsed: %s | ETA: %s | Speed: %.2f MB/s",
+                                    percent, 
+                                    downloaded / (1024 * 1024), 
+                                    file_size / (1024 * 1024),
+                                    elapsed_str,
+                                    eta_str,
+                                    download_rate / (1024 * 1024)
                                 )
             
             # Move the temp file to the final location
@@ -238,9 +258,14 @@ class WikipediaDownloadManager(IDownloadManager):
                 # Update metadata after successful download
                 self.metadata_manager.update_download_metadata(target_filename, file_size)
                 
+                # Format total download time for display
+                formatted_time = self._format_time_hms(download_time)
+                
                 self.logger.info(
-                    ">> WikipediaDownloadManager::download_file Download completed: %d bytes in %.2f seconds",
-                    file_size, download_time
+                    ">> WikipediaDownloadManager::download_file Download completed: %d MB in %s (%.2f MB/s)",
+                    file_size / (1024 * 1024),
+                    formatted_time,
+                    (file_size / (1024 * 1024)) / download_time if download_time > 0 else 0
                 )
                 return True
             else:
@@ -259,6 +284,20 @@ class WikipediaDownloadManager(IDownloadManager):
                 self.download_failures_metric.inc()
                 
             return False
+            
+    def _format_time_hms(self, seconds: float) -> str:
+        """
+        Format time in seconds to a human-readable HH:MM:SS format.
+        
+        Args:
+            seconds: Time in seconds
+            
+        Returns:
+            Formatted time string (HH:MM:SS)
+        """
+        hours, remainder = divmod(int(seconds), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
             
     def get_file_path(self, filename: str) -> str:
         """

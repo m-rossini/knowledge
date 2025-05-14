@@ -9,11 +9,12 @@ ENV PYTHONUNBUFFERED=1
 ENV PROMETHEUS_MULTIPROC_DIR=/tmp
 ENV PYTHONPATH=/app
 
-# Install system dependencies (including libzim dependencies)
+# Install system dependencies (including libzim dependencies and zsh)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libzim-dev \
     pkg-config \
+    zsh \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -39,14 +40,17 @@ COPY src/ /app/src/
 COPY config/ /app/config/
 COPY scripts/ /app/scripts/
 
+# Make scripts executable
+RUN chmod +x /app/scripts/update_wikipedia.sh /app/scripts/schedule_updates.sh
+
 # Create volumes for data persistence
 VOLUME ["/app/data", "/app/logs", "/app/backup", "/app/config"]
 
 # Expose port for metrics endpoint (for Prometheus scraping)
 EXPOSE 9091
 
-# Set the entrypoint
-ENTRYPOINT ["python", "/app/src/main.py"]
+# Set the entrypoint to the update_wikipedia.sh script
+ENTRYPOINT ["/app/scripts/update_wikipedia.sh"]
 
 # Default command (can be overridden)
-CMD ["--config", "/app/config/config.json", "--log-dir", "/app/logs", "--update-wikipedia"]
+CMD []
