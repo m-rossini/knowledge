@@ -29,38 +29,38 @@ class CommandExecutor:
         self.config = config
         self.metrics_manager = metrics_manager
     
-    def update_all_zim_sources(self, force_update: bool = False) -> bool:
+    def download_sources(self, force_update: bool = False) -> bool:
         """
-        Update all ZIM sources defined in the configuration.
+        Download all ZIM sources defined in the configuration.
         
         Args:
-            force_update: If True, force update regardless of version comparison
+            force_update: If True, force download regardless of version comparison
             
         Returns:
-            True if all updates completed successfully, False if any update failed
+            True if all downloads completed successfully, False if any download failed
         """
-        self.logger.info(">> CommandExecutor::update_all_zim_sources Updating all configured ZIM sources")
+        self.logger.info(">> CommandExecutor::download_sources Downloading all configured ZIM sources")
         
         # Get the list of ZIM sources from configuration
         zim_sources = self.config.get("zim_sources", [])
         
         if not zim_sources:
-            self.logger.warning(">>> CommandExecutor::update_all_zim_sources No ZIM sources configured")
+            self.logger.warning(">>> CommandExecutor::download_sources No ZIM sources configured")
             return False
         
-        # Track success of all updates
+        # Track success of all downloads
         all_success = True
         
-        # Update each configured source
+        # Download each configured source
         for source_config in zim_sources:
             source_name = source_config.get("name")
             
             if not source_name:
-                self.logger.warning(">>> CommandExecutor::update_all_zim_sources Source missing name, skipping")
+                self.logger.warning(">>> CommandExecutor::download_sources Source missing name, skipping")
                 all_success = False
                 continue
                 
-            self.logger.info(">> CommandExecutor::update_all_zim_sources Processing source: %s", source_name)
+            self.logger.info(">> CommandExecutor::download_sources Processing source: %s", source_name)
             
             # Create ZIM connector for this source
             zim_connector = ZimFactory.create_connector_from_config(
@@ -69,35 +69,35 @@ class CommandExecutor:
                 source_config
             )
             
-            # Update this source
+            # Download this source
             success = zim_connector.update_if_needed(force=force_update)
             
             if success:
-                self.logger.info(">> CommandExecutor::update_all_zim_sources %s update completed successfully", source_name)
+                self.logger.info(">> CommandExecutor::download_sources %s download completed successfully", source_name)
             else:
-                self.logger.error(">>>> CommandExecutor::update_all_zim_sources %s update failed", source_name)
+                self.logger.error(">>>> CommandExecutor::download_sources %s download failed", source_name)
                 all_success = False
         
         return all_success
     
-    def update_zim_source(self, source_name: str, force_update: bool = False) -> bool:
+    def download_source(self, source_name: str, force_update: bool = False) -> bool:
         """
-        Update a specific ZIM source defined in the configuration.
+        Download a specific ZIM source defined in the configuration.
         
         Args:
-            source_name: Name of the ZIM source to update
-            force_update: If True, force update regardless of version comparison
+            source_name: Name of the ZIM source to download
+            force_update: If True, force download regardless of version comparison
             
         Returns:
-            True if the update completed successfully, False otherwise
+            True if the download completed successfully, False otherwise
         """
-        self.logger.info(">> CommandExecutor::update_zim_source Updating ZIM source: %s", source_name)
+        self.logger.info(">> CommandExecutor::download_source Downloading ZIM source: %s", source_name)
         
         # Get the list of ZIM sources from configuration
         zim_sources = self.config.get("zim_sources", [])
         
         if not zim_sources:
-            self.logger.error(">>>> CommandExecutor::update_zim_source No ZIM sources configured")
+            self.logger.error(">>>> CommandExecutor::download_source No ZIM sources configured")
             return False
         
         # Find the requested source
@@ -108,7 +108,7 @@ class CommandExecutor:
                 break
         
         if not source_config:
-            self.logger.error(">>>> CommandExecutor::update_zim_source Source not found: %s", source_name)
+            self.logger.error(">>>> CommandExecutor::download_source Source not found: %s", source_name)
             return False
             
         # Create ZIM connector for this source
@@ -118,13 +118,13 @@ class CommandExecutor:
             source_config
         )
         
-        # Update this source
+        # Download this source
         success = zim_connector.update_if_needed(force=force_update)
         
         if success:
-            self.logger.info(">> CommandExecutor::update_zim_source %s update completed successfully", source_name)
+            self.logger.info(">> CommandExecutor::download_source %s download completed successfully", source_name)
         else:
-            self.logger.error(">>>> CommandExecutor::update_zim_source %s update failed", source_name)
+            self.logger.error(">>>> CommandExecutor::download_source %s download failed", source_name)
             
         return success
     
@@ -145,7 +145,7 @@ class CommandExecutor:
         
         # If just 'zim', update all ZIM sources
         if source_type.lower() == 'zim':
-            return self.update_all_zim_sources(force_update)
+            return self.download_sources(force_update)
         
         # Handle source specification with name
         if source_type.lower().startswith('zim:'):
@@ -154,7 +154,7 @@ class CommandExecutor:
             parts = source_type.split(':')
             if len(parts) >= 2:
                 source_name = parts[1]
-                return self.update_zim_source(source_name, force_update)
+                return self.download_source(source_name, force_update)
             else:
                 self.logger.error(">>>> CommandExecutor::update_knowledge_source Invalid ZIM source format. Use zim:source_name")
                 return False

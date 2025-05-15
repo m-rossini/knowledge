@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 #
-# update_zim.sh - Checks for ZIM file updates and downloads if necessary
+# download_sources.sh - Downloads configured knowledge sources as needed
 #
 
 # Colors for terminal output
@@ -88,17 +88,17 @@ function create_directories() {
     # as they'll be created automatically based on the configuration
 }
 
-function run_update() {
-    log_info "Running ZIM update check"
+function download_source() {
+    log_info "Downloading knowledge sources"
     
     # Build command based on arguments
     local cmd="cd \"${BASE_PATH}\" && PYTHONPATH=\"${BASE_PATH}\" python3 \"${BASE_PATH}/src/main.py\" --config \"${CONFIG_FILE}\" --log-dir \"${LOG_DIR}\""
     
     if [ -z "${SOURCE_NAME}" ]; then
-        # Update all sources
+        # Download all sources
         cmd="${cmd} --update-zim"
     else
-        # Update specific source
+        # Download specific source
         cmd="${cmd} --update-source \"${SOURCE_NAME}\""
     fi
     
@@ -110,31 +110,31 @@ function run_update() {
     eval "${cmd}"
     
     if [ $? -ne 0 ]; then
-        log_error "ZIM update failed"
+        log_error "Source download failed"
         return 1
     fi
     
-    log_info "ZIM update process completed"
+    log_info "Download process completed"
     return 0
 }
 
 # Main execution
 function main() {
-    log_info "Starting ZIM update process"
+    log_info "Starting knowledge sources download process"
     
     # Parse command line arguments
     parse_arguments "$@"
     
-    # Run the update process
+    # Run the download process
     check_dependencies
     create_directories
-    run_update
+    download_source
     
     if [ $? -eq 0 ]; then
-        log_info "ZIM update completed successfully"
+        log_info "Knowledge sources download completed successfully"
         exit 0
     else
-        log_error "ZIM update process failed"
+        log_error "Knowledge sources download process failed"
         exit 1
     fi
 }
