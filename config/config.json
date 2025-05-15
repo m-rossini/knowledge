@@ -8,6 +8,15 @@
       "backup_path": "${BASE_PATH}/backup/wikipedia",
       "check_interval": 30,
       "max_backups": 3
+    },
+    {
+      "name": "wikivoyage",
+      "source_url": "https://download.kiwix.org/zim/wikivoyage/",
+      "file_pattern": "wikivoyage_en_all_[0-9]{4}-[0-9]{2}.zim",
+      "storage_path": "${BASE_PATH}/data/wikivoyage",
+      "backup_path": "${BASE_PATH}/backup/wikivoyage",
+      "check_interval": 30,
+      "max_backups": 3
     }
   ],
   "logging": {

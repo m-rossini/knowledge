@@ -46,7 +46,7 @@ class ZimFactory:
         os.makedirs(backup_dir, exist_ok=True)
         
         # Create components
-        metadata_manager = ZimMetadataManager(data_dir)
+        metadata_manager = ZimMetadataManager(data_dir, source_name)
         
         download_manager = ZimDownloadManager(
             source_url, 
@@ -109,7 +109,7 @@ class ZimFactory:
         os.makedirs(backup_dir, exist_ok=True)
         
         # Create components
-        metadata_manager = ZimMetadataManager(data_dir)
+        metadata_manager = ZimMetadataManager(data_dir, source_name)
         
         download_manager = ZimDownloadManager(
             source_url, 

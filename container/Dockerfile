@@ -55,6 +55,9 @@ VOLUME ["/app/data", "/app/logs", "/app/backup", "/app/config"]
 # Expose port for metrics endpoint (for Prometheus scraping)
 EXPOSE 9091
 
+# Set BASE_PATH for all scripts and apps
+ENV BASE_PATH=/app
+
 # Set the entrypoint to the download_sources.sh script
 ENTRYPOINT ["/app/scripts/download_sources.sh"]
 
