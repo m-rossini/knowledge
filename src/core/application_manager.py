@@ -151,8 +151,14 @@ class ApplicationManager:
             Exit code (0 for success, non-zero for failure)
         """
         if hasattr(args, 'update_zim') and args.update_zim:
-            source_type = args.update_zim
-            success = self.command_executor.update_knowledge_source(source_type, force_update=args.force_download)
+            # Update all ZIM sources defined in the configuration
+            success = self.command_executor.update_all_zim_sources(force_update=args.force_download)
+            return 0 if success else 1
+        
+        if hasattr(args, 'update_source') and args.update_source:
+            # Update a specific ZIM source by name
+            source_name = args.update_source
+            success = self.command_executor.update_zim_source(source_name, force_update=args.force_download)
             return 0 if success else 1
         
         # If no specific action was requested, just log a message

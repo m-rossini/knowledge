@@ -37,7 +37,7 @@ fi
 CONFIG_FILE="${BASE_PATH}/config/config.json"
 LOG_DIR="${BASE_PATH}/logs"
 FORCE_DOWNLOAD=false
-SOURCE_TYPE="zim:wikipedia:wikipedia"
+SOURCE_NAME=""
 
 # Functions
 function parse_arguments() {
@@ -50,8 +50,8 @@ function parse_arguments() {
                 shift
                 ;;
             --source|-s)
-                SOURCE_TYPE="$2"
-                log_info "Using source type: ${SOURCE_TYPE}"
+                SOURCE_NAME="$2"
+                log_info "Using source name: ${SOURCE_NAME}"
                 shift 2
                 ;;
             *)
@@ -81,43 +81,46 @@ function check_dependencies() {
 function create_directories() {
     log_info "Ensuring required directories exist"
     
-    # Extract source name from SOURCE_TYPE (if in the format zim:source_name:config_prefix)
-    local source_name="zim"
-    if [[ "${SOURCE_TYPE}" == zim:*:* ]]; then
-        source_name=$(echo "${SOURCE_TYPE}" | cut -d: -f2)
-    fi
-    
-    # Create directories if they don't exist
+    # Create log directory
     mkdir -p "${LOG_DIR}"
-    mkdir -p "${BASE_PATH}/data/${source_name}"
-    mkdir -p "${BASE_PATH}/backup/${source_name}"
+    
+    # Note: We don't need to create source-specific directories anymore
+    # as they'll be created automatically based on the configuration
 }
 
 function run_update() {
-    log_info "Running ZIM update check for ${SOURCE_TYPE}"
+    log_info "Running ZIM update check"
     
-    # Build command with the source type
-    local cmd="cd \"${BASE_PATH}\" && PYTHONPATH=\"${BASE_PATH}\" python3 \"${BASE_PATH}/src/main.py\" --config \"${CONFIG_FILE}\" --log-dir \"${LOG_DIR}\" --update-zim \"${SOURCE_TYPE}\""
+    # Build command based on arguments
+    local cmd="cd \"${BASE_PATH}\" && PYTHONPATH=\"${BASE_PATH}\" python3 \"${BASE_PATH}/src/main.py\" --config \"${CONFIG_FILE}\" --log-dir \"${LOG_DIR}\""
+    
+    if [ -z "${SOURCE_NAME}" ]; then
+        # Update all sources
+        cmd="${cmd} --update-zim"
+    else
+        # Update specific source
+        cmd="${cmd} --update-source \"${SOURCE_NAME}\""
+    fi
     
     if [ "${FORCE_DOWNLOAD}" = true ]; then
         cmd="${cmd} --force-download"
     fi
     
-    # Run the Python application with update-zim flag
+    # Run the Python application
     eval "${cmd}"
     
     if [ $? -ne 0 ]; then
-        log_error "ZIM update failed for ${SOURCE_TYPE}"
+        log_error "ZIM update failed"
         return 1
     fi
     
-    log_info "ZIM update process completed for ${SOURCE_TYPE}"
+    log_info "ZIM update process completed"
     return 0
 }
 
 # Main execution
 function main() {
-    log_info "Starting ZIM update process for ${SOURCE_TYPE}"
+    log_info "Starting ZIM update process"
     
     # Parse command line arguments
     parse_arguments "$@"
@@ -128,10 +131,10 @@ function main() {
     run_update
     
     if [ $? -eq 0 ]; then
-        log_info "ZIM update completed successfully for ${SOURCE_TYPE}"
+        log_info "ZIM update completed successfully"
         exit 0
     else
-        log_error "ZIM update process failed for ${SOURCE_TYPE}"
+        log_error "ZIM update process failed"
         exit 1
     fi
 }

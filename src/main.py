@@ -15,7 +15,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="Knowledge Archival System")
     parser.add_argument(
         "--config", 
-        default="config/config.yaml", 
+        default="config/config.json", 
         help="Path to configuration file"
     )
     parser.add_argument(
@@ -31,9 +31,13 @@ def parse_arguments():
     )
     parser.add_argument(
         "--update-zim",
-        metavar="SOURCE",
-        help="Check for updates of ZIM files. Can be 'zim' for default configuration or "
-             "'zim:source_name:config_prefix' for specific sources (e.g., 'zim:wikipedia:wikipedia')"
+        action="store_true",
+        help="Update all ZIM sources defined in the configuration"
+    )
+    parser.add_argument(
+        "--update-source",
+        metavar="SOURCE_NAME",
+        help="Update a specific ZIM source by name as defined in configuration"
     )
     parser.add_argument(
         "--force-download",
