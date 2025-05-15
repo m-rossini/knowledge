@@ -1,0 +1,140 @@
+#!/usr/bin/env zsh
+#
+# update_zim.sh - Checks for ZIM file updates and downloads if necessary
+#
+
+# Colors for terminal output
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+# Set error handling
+set -e
+
+# Functions
+function log_info() {
+    echo -e "${GREEN}>> ShellScript::${FUNCNAME[1]} $1${NC}"
+}
+
+function log_warn() {
+    echo -e "${YELLOW}>>> ShellScript::${FUNCNAME[1]} $1${NC}"
+}
+
+function log_error() {
+    echo -e "${RED}>>>> ShellScript::${FUNCNAME[1]} $1${NC}"
+}
+
+# Configuration - use BASE_PATH from environment or set default
+if [ -z "${BASE_PATH}" ]; then
+    # BASE_PATH not provided, use default
+    export BASE_PATH="${HOME}/projetos/knowledge"
+    log_info "Using default BASE_PATH: ${BASE_PATH}"
+else
+    log_info "Using provided BASE_PATH: ${BASE_PATH}"
+fi
+
+CONFIG_FILE="${BASE_PATH}/config/config.json"
+LOG_DIR="${BASE_PATH}/logs"
+FORCE_DOWNLOAD=false
+SOURCE_TYPE="zim:wikipedia:wikipedia"
+
+# Functions
+function parse_arguments() {
+    # Parse command line arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --force|-f)
+                FORCE_DOWNLOAD=true
+                log_info "Force download enabled"
+                shift
+                ;;
+            --source|-s)
+                SOURCE_TYPE="$2"
+                log_info "Using source type: ${SOURCE_TYPE}"
+                shift 2
+                ;;
+            *)
+                log_warn "Unknown option: $1"
+                shift
+                ;;
+        esac
+    done
+}
+
+function check_dependencies() {
+    log_info "Checking dependencies"
+    
+    # Check if Python is installed
+    if ! command -v python3 &> /dev/null; then
+        log_error "Python 3 is not installed. Please install Python 3 to continue."
+        exit 1
+    fi
+    
+    # Check if required Python packages are installed
+    if ! python3 -c "import requests" &> /dev/null; then
+        log_error "Required Python packages are not installed. Please run: pip install -r requirements.txt"
+        exit 1
+    fi
+}
+
+function create_directories() {
+    log_info "Ensuring required directories exist"
+    
+    # Extract source name from SOURCE_TYPE (if in the format zim:source_name:config_prefix)
+    local source_name="zim"
+    if [[ "${SOURCE_TYPE}" == zim:*:* ]]; then
+        source_name=$(echo "${SOURCE_TYPE}" | cut -d: -f2)
+    fi
+    
+    # Create directories if they don't exist
+    mkdir -p "${LOG_DIR}"
+    mkdir -p "${BASE_PATH}/data/${source_name}"
+    mkdir -p "${BASE_PATH}/backup/${source_name}"
+}
+
+function run_update() {
+    log_info "Running ZIM update check for ${SOURCE_TYPE}"
+    
+    # Build command with the source type
+    local cmd="cd \"${BASE_PATH}\" && PYTHONPATH=\"${BASE_PATH}\" python3 \"${BASE_PATH}/src/main.py\" --config \"${CONFIG_FILE}\" --log-dir \"${LOG_DIR}\" --update-zim \"${SOURCE_TYPE}\""
+    
+    if [ "${FORCE_DOWNLOAD}" = true ]; then
+        cmd="${cmd} --force-download"
+    fi
+    
+    # Run the Python application with update-zim flag
+    eval "${cmd}"
+    
+    if [ $? -ne 0 ]; then
+        log_error "ZIM update failed for ${SOURCE_TYPE}"
+        return 1
+    fi
+    
+    log_info "ZIM update process completed for ${SOURCE_TYPE}"
+    return 0
+}
+
+# Main execution
+function main() {
+    log_info "Starting ZIM update process for ${SOURCE_TYPE}"
+    
+    # Parse command line arguments
+    parse_arguments "$@"
+    
+    # Run the update process
+    check_dependencies
+    create_directories
+    run_update
+    
+    if [ $? -eq 0 ]; then
+        log_info "ZIM update completed successfully for ${SOURCE_TYPE}"
+        exit 0
+    else
+        log_error "ZIM update process failed for ${SOURCE_TYPE}"
+        exit 1
+    fi
+}
+
+# Call the main function with all arguments
+main "$@"
