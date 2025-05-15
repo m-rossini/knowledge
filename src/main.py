@@ -30,9 +30,10 @@ def parse_arguments():
         help="Logging level"
     )
     parser.add_argument(
-        "--update-wikipedia",
-        action="store_true",
-        help="Check for Wikipedia updates and download if available"
+        "--update-zim",
+        metavar="SOURCE",
+        help="Check for updates of ZIM files. Can be 'zim' for default configuration or "
+             "'zim:source_name:config_prefix' for specific sources (e.g., 'zim:wikipedia:wikipedia')"
     )
     parser.add_argument(
         "--force-download",

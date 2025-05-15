@@ -150,8 +150,9 @@ class ApplicationManager:
         Returns:
             Exit code (0 for success, non-zero for failure)
         """
-        if args.update_wikipedia:
-            success = self.command_executor.update_knowledge_source('wikipedia', force_update=args.force_download)
+        if hasattr(args, 'update_zim') and args.update_zim:
+            source_type = args.update_zim
+            success = self.command_executor.update_knowledge_source(source_type, force_update=args.force_download)
             return 0 if success else 1
         
         # If no specific action was requested, just log a message
