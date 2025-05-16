@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Wikipedia-specific implementation of the backup manager.
-Handles backing up Wikipedia ZIM files.
+Generic ZIM file backup manager implementation.
+Handles backing up ZIM files from any source.
 """
 import os
 import logging
@@ -11,12 +11,12 @@ from datetime import datetime
 from src.sources.interfaces.backup_manager import IBackupManager
 from src.sources.interfaces.download_manager import IDownloadManager
 
-class WikipediaBackupManager(IBackupManager):
-    """Manages backups of Wikipedia ZIM files."""
+class ZimBackupManager(IBackupManager):
+    """Manages backups of ZIM files from any source."""
     
     def __init__(self, data_dir: str, backup_dir: str, 
                  download_manager: IDownloadManager, 
-                 max_backups: int, metrics_manager):
+                 max_backups: int, metrics_manager, source_name: str = "zim"):
         """
         Initialize the backup manager.
         
@@ -26,6 +26,7 @@ class WikipediaBackupManager(IBackupManager):
             download_manager: Download manager instance
             max_backups: Maximum number of backups to keep
             metrics_manager: Metrics manager instance
+            source_name: Name of the source (for metrics)
         """
         self.logger = logging.getLogger(__name__)
         self.data_dir = data_dir
@@ -33,10 +34,11 @@ class WikipediaBackupManager(IBackupManager):
         self.download_manager = download_manager
         self.max_backups = max_backups
         self.metrics_manager = metrics_manager
+        self.source_name = source_name
     
     def backup_current_version(self) -> bool:
         """
-        Backup the current Wikipedia version before downloading a new one.
+        Backup the current ZIM file version before downloading a new one.
         
         Returns:
             True if backup was successful, False otherwise
@@ -44,7 +46,7 @@ class WikipediaBackupManager(IBackupManager):
         latest_local_file = self.download_manager.get_latest_local_file()
         
         if not latest_local_file or not os.path.exists(latest_local_file):
-            self.logger.info(">> WikipediaBackupManager::backup_current_version No existing file to backup")
+            self.logger.info(">> ZimBackupManager::backup_current_version No existing file to backup")
             return True
         
         try:
@@ -55,7 +57,7 @@ class WikipediaBackupManager(IBackupManager):
             backup_path = os.path.join(self.backup_dir, backup_filename)
             
             self.logger.info(
-                ">> WikipediaBackupManager::backup_current_version Backing up to %s", 
+                ">> ZimBackupManager::backup_current_version Backing up to %s", 
                 backup_path
             )
             
@@ -64,11 +66,11 @@ class WikipediaBackupManager(IBackupManager):
             
             # Verify backup
             if os.path.exists(backup_path) and os.path.getsize(backup_path) == os.path.getsize(latest_local_file):
-                self.logger.info(">> WikipediaBackupManager::backup_current_version Backup successful")
+                self.logger.info(">> ZimBackupManager::backup_current_version Backup successful")
                 
                 # Update metrics
-                backup_count_metric = self.metrics_manager.get_metric("backup_count")
-                backup_size_metric = self.metrics_manager.get_metric("backup_last_size_bytes")
+                backup_count_metric = self.metrics_manager.get_metric(f"{self.source_name}_backup_count")
+                backup_size_metric = self.metrics_manager.get_metric(f"{self.source_name}_backup_last_size_bytes")
                 
                 if backup_count_metric:
                     backup_count_metric.inc()
@@ -80,14 +82,14 @@ class WikipediaBackupManager(IBackupManager):
                 
                 return True
             else:
-                self.logger.error(">>>> WikipediaBackupManager::backup_current_version Backup verification failed")
+                self.logger.error(">>>> ZimBackupManager::backup_current_version Backup verification failed")
                 return False
                 
         except Exception as e:
-            self.logger.error(">>>> WikipediaBackupManager::backup_current_version Backup failed: %s", str(e))
+            self.logger.error(">>>> ZimBackupManager::backup_current_version Backup failed: %s", str(e))
             
             # Update failure metric
-            backup_failures_metric = self.metrics_manager.get_metric("backup_failures")
+            backup_failures_metric = self.metrics_manager.get_metric(f"{self.source_name}_backup_failures")
             if backup_failures_metric:
                 backup_failures_metric.inc()
                 
@@ -109,8 +111,8 @@ class WikipediaBackupManager(IBackupManager):
             # Remove old backups
             if len(backup_files) > self.max_backups:
                 for file_path, _ in backup_files[self.max_backups:]:
-                    self.logger.info(">> WikipediaBackupManager::cleanup_old_backups Removing old backup: %s", file_path)
+                    self.logger.info(">> ZimBackupManager::cleanup_old_backups Removing old backup: %s", file_path)
                     os.remove(file_path)
                     
         except Exception as e:
-            self.logger.error(">>>> WikipediaBackupManager::cleanup_old_backups Error cleaning up old backups: %s", str(e))
+            self.logger.error(">>>> ZimBackupManager::cleanup_old_backups Error cleaning up old backups: %s", str(e))

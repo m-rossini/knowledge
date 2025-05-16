@@ -47,7 +47,7 @@ COPY scripts/ /app/scripts/
 COPY src/ /app/src/
 
 # Make scripts executable
-RUN chmod +x /app/scripts/update_wikipedia.sh /app/scripts/schedule_updates.sh
+RUN chmod +x /app/scripts/download_sources.sh
 
 # Create volumes for data persistence
 VOLUME ["/app/data", "/app/logs", "/app/backup", "/app/config"]
@@ -55,8 +55,11 @@ VOLUME ["/app/data", "/app/logs", "/app/backup", "/app/config"]
 # Expose port for metrics endpoint (for Prometheus scraping)
 EXPOSE 9091
 
-# Set the entrypoint to the update_wikipedia.sh script
-ENTRYPOINT ["/app/scripts/update_wikipedia.sh"]
+# Set BASE_PATH for all scripts and apps
+ENV BASE_PATH=/app
+
+# Set the entrypoint to the download_sources.sh script and always pass --log-level from the environment
+ENTRYPOINT ["/app/scripts/download_sources.sh", "--log-level", "${LOG_LEVEL}"]
 
 # Default command (can be overridden)
 CMD []

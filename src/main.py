@@ -15,7 +15,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="Knowledge Archival System")
     parser.add_argument(
         "--config", 
-        default="config/config.yaml", 
+        default="config/config.json", 
         help="Path to configuration file"
     )
     parser.add_argument(
@@ -30,9 +30,9 @@ def parse_arguments():
         help="Logging level"
     )
     parser.add_argument(
-        "--update-wikipedia",
-        action="store_true",
-        help="Check for Wikipedia updates and download if available"
+        "--source",
+        metavar="SOURCE_NAME",
+        help="Download a specific source by name as defined in configuration"
     )
     parser.add_argument(
         "--force-download",
@@ -46,7 +46,18 @@ def main():
     """Main application entry point."""
     # Parse command line arguments
     args = parse_arguments()
-    
+
+    # If LOG_LEVEL is set in the environment, override args.log_level
+    import os
+    env_log_level = os.environ.get("LOG_LEVEL")
+    if env_log_level:
+        args.log_level = env_log_level.upper()
+
+    # Force logging level globally before anything else
+    import logging
+    log_level = getattr(logging, args.log_level, logging.INFO)
+    logging.basicConfig(level=log_level)
+
     # Create and run the application manager
     app_manager = ApplicationManager()
     return app_manager.run(args)

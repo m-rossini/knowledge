@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Wikipedia-specific implementation of the download manager.
-Handles downloading of Wikipedia ZIM files.
+ZIM file implementation of the download manager.
+Handles downloading of ZIM files from any source.
 """
 import os
 import re
@@ -14,41 +14,43 @@ from typing import Optional, Tuple
 from src.sources.interfaces.download_manager import IDownloadManager
 from src.sources.interfaces.metadata_manager import IMetadataManager
 
-class WikipediaDownloadManager(IDownloadManager):
-    """Manages downloading of Wikipedia ZIM files."""
+class ZimDownloadManager(IDownloadManager):
+    """Manages downloading of ZIM files from any source."""
     
-    def __init__(self, zim_source_url: str, file_pattern: str, data_dir: str, 
-                 metadata_manager: IMetadataManager, metrics_manager):
+    def __init__(self, source_url: str, file_pattern: str, data_dir: str, 
+                 metadata_manager: IMetadataManager, metrics_manager, source_name: str = "zim"):
         """
         Initialize the download manager.
         
         Args:
-            zim_source_url: URL to the ZIM file source
-            file_pattern: Regex pattern to match Wikipedia ZIM files
+            source_url: URL to the ZIM file source
+            file_pattern: Regex pattern to match ZIM files
             data_dir: Directory to store downloaded files
             metadata_manager: Metadata manager instance
             metrics_manager: Metrics manager instance
+            source_name: Name of the source (for metrics and logging)
         """
         self.logger = logging.getLogger(__name__)
         
         # Configuration
-        self.zim_source_url = zim_source_url
+        self.source_url = source_url
         self.file_pattern = file_pattern
         self.data_dir = data_dir
+        self.source_name = source_name
         
         # Ensure the source URL ends with a slash
-        if not self.zim_source_url.endswith('/'):
-            self.zim_source_url += '/'
+        if not self.source_url.endswith('/'):
+            self.source_url += '/'
             
         # Dependencies
         self.metadata_manager = metadata_manager
         self.metrics_manager = metrics_manager
         
         # Metrics references
-        self.download_count_metric = self.metrics_manager.get_metric("wikipedia_download_count")
-        self.download_size_metric = self.metrics_manager.get_metric("wikipedia_last_download_size_bytes")
-        self.download_time_metric = self.metrics_manager.get_metric("wikipedia_last_download_time_seconds")
-        self.download_failures_metric = self.metrics_manager.get_metric("wikipedia_download_failures")
+        self.download_count_metric = self.metrics_manager.get_metric(f"{source_name}_download_count")
+        self.download_size_metric = self.metrics_manager.get_metric(f"{source_name}_last_download_size_bytes")
+        self.download_time_metric = self.metrics_manager.get_metric(f"{source_name}_last_download_time_seconds")
+        self.download_failures_metric = self.metrics_manager.get_metric(f"{source_name}_download_failures")
         
     def get_latest_remote_file(self) -> Tuple[Optional[str], Optional[str]]:
         """
@@ -58,8 +60,8 @@ class WikipediaDownloadManager(IDownloadManager):
             Tuple of (file_name, full_url) if found, (None, None) otherwise
         """
         try:
-            # Get directory listing from the Kiwix server
-            response = requests.get(self.zim_source_url, timeout=30)
+            # Get directory listing from the server
+            response = requests.get(self.source_url, timeout=30)
             response.raise_for_status()
             
             content = response.text
@@ -69,18 +71,18 @@ class WikipediaDownloadManager(IDownloadManager):
             matches = pattern.findall(content)
             
             if not matches:
-                self.logger.warning(">>> WikipediaDownloadManager::get_latest_remote_file No files matching pattern: %s", self.file_pattern)
+                self.logger.warning(">>> ZimDownloadManager::get_latest_remote_file No files matching pattern: %s", self.file_pattern)
                 return None, None
                 
             # Sort files by name (which includes the date) to get the latest
             latest_file = sorted(matches)[-1]
-            full_url = f"{self.zim_source_url}{latest_file}"
+            full_url = f"{self.source_url}{latest_file}"
             
-            self.logger.info(">> WikipediaDownloadManager::get_latest_remote_file Found latest file: %s", latest_file)
+            self.logger.info(">> ZimDownloadManager::get_latest_remote_file Found latest file: %s", latest_file)
             return latest_file, full_url
             
         except Exception as e:
-            self.logger.error(">>>> WikipediaDownloadManager::get_latest_remote_file Error finding latest file: %s", str(e))
+            self.logger.error(">>>> ZimDownloadManager::get_latest_remote_file Error finding latest file: %s", str(e))
             return None, None
             
     def get_latest_local_file(self) -> Optional[str]:
@@ -108,7 +110,7 @@ class WikipediaDownloadManager(IDownloadManager):
             return os.path.join(self.data_dir, latest_file)
             
         except Exception as e:
-            self.logger.error(">>>> WikipediaDownloadManager::get_latest_local_file Error finding local file: %s", str(e))
+            self.logger.error(">>>> ZimDownloadManager::get_latest_local_file Error finding local file: %s", str(e))
             return None
     
     def is_newer_version(self, remote_file: str) -> bool:
@@ -132,7 +134,7 @@ class WikipediaDownloadManager(IDownloadManager):
         remote_date = self._extract_version_date(remote_file)
         
         if not remote_date:
-            self.logger.error(">>>> WikipediaDownloadManager::is_newer_version Could not extract date from remote file")
+            self.logger.error(">>>> ZimDownloadManager::is_newer_version Could not extract date from remote file")
             # If we can't determine, assume it's not newer to be safe
             return False
             
@@ -140,7 +142,7 @@ class WikipediaDownloadManager(IDownloadManager):
         match = re.match(r'(\d{4})-(\d{2})', latest_version)
         
         if not match:
-            self.logger.error(">>>> WikipediaDownloadManager::is_newer_version Invalid format in metadata version: %s", latest_version)
+            self.logger.error(">>>> ZimDownloadManager::is_newer_version Invalid format in metadata version: %s", latest_version)
             return True  # Assume newer if metadata format is invalid
             
         try:
@@ -151,7 +153,7 @@ class WikipediaDownloadManager(IDownloadManager):
             # Compare dates
             return remote_date > local_date
         except (ValueError, IndexError):
-            self.logger.error(">>>> WikipediaDownloadManager::is_newer_version Error comparing version dates")
+            self.logger.error(">>>> ZimDownloadManager::is_newer_version Error comparing version dates")
             return True  # Be conservative and assume it's newer
             
     def _extract_version_date(self, filename: str) -> Optional[datetime]:
@@ -189,9 +191,9 @@ class WikipediaDownloadManager(IDownloadManager):
         local_file_path = os.path.join(self.data_dir, target_filename)
         temp_file_path = f"{local_file_path}.downloading"
         
-        self.logger.info(">> WikipediaDownloadManager::download_file Starting download from %s", url)
-        self.logger.info(">> WikipediaDownloadManager::download_file Using temporary file path: %s", temp_file_path)
-        self.logger.info(">> WikipediaDownloadManager::download_file Final destination path: %s", local_file_path)
+        self.logger.info(">> ZimDownloadManager::download_file Starting download from %s", url)
+        self.logger.info(">> ZimDownloadManager::download_file Using temporary file path: %s", temp_file_path)
+        self.logger.info(">> ZimDownloadManager::download_file Final destination path: %s", local_file_path)
         
         # Track download time for metrics
         start_time = time.time()
@@ -230,7 +232,7 @@ class WikipediaDownloadManager(IDownloadManager):
                                 percent = (downloaded / file_size) * 100 if file_size else 0
                                 
                                 self.logger.info(
-                                    ">> WikipediaDownloadManager::download_file Downloaded %.2f%% (%d MB / %d MB) | Elapsed: %s | ETA: %s | Speed: %.2f MB/s",
+                                    ">> ZimDownloadManager::download_file Downloaded %.2f%% (%d MB / %d MB) | Elapsed: %s | ETA: %s | Speed: %.2f MB/s",
                                     percent, 
                                     downloaded / (1024 * 1024), 
                                     file_size / (1024 * 1024),
@@ -242,7 +244,7 @@ class WikipediaDownloadManager(IDownloadManager):
             # Move the temp file to the final location
             if os.path.exists(temp_file_path):
                 os.rename(temp_file_path, local_file_path)
-                self.logger.info(">> WikipediaDownloadManager::download_file Renamed temporary file to final path: %s", local_file_path)
+                self.logger.info(">> ZimDownloadManager::download_file Renamed temporary file to final path: %s", local_file_path)
                 
                 # Update metrics
                 download_time = time.time() - start_time
@@ -262,7 +264,7 @@ class WikipediaDownloadManager(IDownloadManager):
                 formatted_time = self._format_time_hms(download_time)
                 
                 self.logger.info(
-                    ">> WikipediaDownloadManager::download_file Download completed: %d MB in %s (%.2f MB/s)",
+                    ">> ZimDownloadManager::download_file Download completed: %d MB in %s (%.2f MB/s)",
                     file_size / (1024 * 1024),
                     formatted_time,
                     (file_size / (1024 * 1024)) / download_time if download_time > 0 else 0
@@ -272,12 +274,12 @@ class WikipediaDownloadManager(IDownloadManager):
                 raise Exception("Temporary file not found after download")
                 
         except Exception as e:
-            self.logger.error(">>>> WikipediaDownloadManager::download_file Download failed: %s", str(e))
+            self.logger.error(">>>> ZimDownloadManager::download_file Download failed: %s", str(e))
             
             # Clean up temp file if it exists
             if os.path.exists(temp_file_path):
                 os.remove(temp_file_path)
-                self.logger.info(">> WikipediaDownloadManager::download_file Cleaned up temporary file: %s", temp_file_path)
+                self.logger.info(">> ZimDownloadManager::download_file Cleaned up temporary file: %s", temp_file_path)
             
             # Update failure metric
             if self.download_failures_metric:

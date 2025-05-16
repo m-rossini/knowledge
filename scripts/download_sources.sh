@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 #
-# update_wikipedia.sh - Checks for Wikipedia updates and downloads if necessary
+# download_sources.sh - Downloads configured knowledge sources as needed
 #
 
 # Colors for terminal output
@@ -37,6 +37,7 @@ fi
 CONFIG_FILE="${BASE_PATH}/config/config.json"
 LOG_DIR="${BASE_PATH}/logs"
 FORCE_DOWNLOAD=false
+SOURCE_NAME=""
 
 # Functions
 function parse_arguments() {
@@ -47,6 +48,11 @@ function parse_arguments() {
                 FORCE_DOWNLOAD=true
                 log_info "Force download enabled"
                 shift
+                ;;
+            --source|-s)
+                SOURCE_NAME="$2"
+                log_info "Using source name: ${SOURCE_NAME}"
+                shift 2
                 ;;
             *)
                 log_warn "Unknown option: $1"
@@ -75,51 +81,65 @@ function check_dependencies() {
 function create_directories() {
     log_info "Ensuring required directories exist"
     
-    # Create directories if they don't exist
+    # Create log directory
     mkdir -p "${LOG_DIR}"
-    mkdir -p "${BASE_PATH}/data/wikipedia"
-    mkdir -p "${BASE_PATH}/backup/wikipedia"
+    
+    # Note: We don't need to create source-specific directories anymore
+    # as they'll be created automatically based on the configuration
 }
 
-function run_update() {
-    log_info "Running Wikipedia update check"
+function download_source() {
+    log_info "Downloading knowledge sources"
+    log_info "Using config file: ${CONFIG_FILE}"
+    log_info "Log directory: ${LOG_DIR}"
+    if [ -n "${SOURCE_NAME}" ]; then
+        log_info "Requested source: ${SOURCE_NAME}"
+    else
+        log_info "No specific source requested; all sources in config will be processed"
+    fi
     
-    # Build command with or without force download flag
-    local cmd="cd \"${BASE_PATH}\" && PYTHONPATH=\"${BASE_PATH}\" python3 \"${BASE_PATH}/src/main.py\" --config \"${CONFIG_FILE}\" --log-dir \"${LOG_DIR}\" --update-wikipedia"
+    # Build command based on arguments
+    local cmd="cd \"${BASE_PATH}\" && PYTHONPATH=\"${BASE_PATH}\" python3 \"${BASE_PATH}/src/main.py\" --config \"${CONFIG_FILE}\" --log-dir \"${LOG_DIR}\" --log-level DEBUG"
+    
+    # If a specific source is requested, pass it as a generic --source argument
+    if [ -n "${SOURCE_NAME}" ]; then
+        cmd="${cmd} --source \"${SOURCE_NAME}\""
+    fi
     
     if [ "${FORCE_DOWNLOAD}" = true ]; then
+        log_info "Force download is enabled"
         cmd="${cmd} --force-download"
     fi
     
-    # Run the Python application with update-wikipedia flag
+    # Run the Python application
     eval "${cmd}"
     
     if [ $? -ne 0 ]; then
-        log_error "Wikipedia update failed"
+        log_error "Source download failed"
         return 1
     fi
     
-    log_info "Wikipedia update process completed"
+    log_info "Download process completed"
     return 0
 }
 
 # Main execution
 function main() {
-    log_info "Starting Wikipedia update process"
+    log_info "Starting knowledge sources download process"
     
     # Parse command line arguments
     parse_arguments "$@"
     
-    # Run the update process
+    # Run the download process
     check_dependencies
     create_directories
-    run_update
+    download_source
     
     if [ $? -eq 0 ]; then
-        log_info "Wikipedia update completed successfully"
+        log_info "Knowledge sources download completed successfully"
         exit 0
     else
-        log_error "Wikipedia update process failed"
+        log_error "Knowledge sources download process failed"
         exit 1
     fi
 }

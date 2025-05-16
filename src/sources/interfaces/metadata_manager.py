@@ -4,28 +4,28 @@ Metadata manager interface for the knowledge archival system.
 Defines the contract for metadata operations.
 """
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 class IMetadataManager(ABC):
-    """Interface for metadata operations."""
+    """Interface for metadata operations (multi-source array)."""
     
     @abstractmethod
-    def load_metadata(self) -> Dict[str, Any]:
+    def load_metadata(self) -> List[Dict[str, Any]]:
         """
         Load metadata from storage.
         
         Returns:
-            Dictionary containing download metadata
+            List of metadata objects (one per source)
         """
         pass
         
     @abstractmethod
-    def save_metadata(self, metadata: Dict[str, Any]) -> bool:
+    def save_metadata(self, metadata: List[Dict[str, Any]]) -> bool:
         """
         Save metadata to storage.
         
         Args:
-            metadata: Dictionary containing download metadata
+            metadata: List of metadata objects
             
         Returns:
             True if save was successful, False otherwise

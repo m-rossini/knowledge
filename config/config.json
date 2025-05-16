@@ -1,12 +1,24 @@
 {
-  "wikipedia": {
-    "zim_source_url": "https://download.kiwix.org/zim/wikipedia/",
-    "file_pattern": "wikipedia_en_all_maxi_[0-9]{4}-[0-9]{2}.zim",
-    "storage_path": "${BASE_PATH}/data/wikipedia",
-    "backup_path": "${BASE_PATH}/backup/wikipedia",
-    "check_interval": 30,
-    "max_backups": 3
-  },
+  "zim_sources": [
+    {
+      "name": "wikivoyage",
+      "source_url": "https://download.kiwix.org/zim/wikivoyage/",
+      "file_pattern": "wikivoyage_en_all_maxi_[0-9]{4}-[0-9]{2}\\.zim",
+      "storage_path": "${BASE_PATH}/data/wikivoyage",
+      "backup_path": "${BASE_PATH}/backup/wikivoyage",
+      "check_interval": 30,
+      "max_backups": 3
+    },
+    {
+      "name": "wikipedia",
+      "source_url": "https://download.kiwix.org/zim/wikipedia/",
+      "file_pattern": "wikipedia_en_all_maxi_[0-9]{4}-[0-9]{2}.zim",
+      "storage_path": "${BASE_PATH}/data/wikipedia",
+      "backup_path": "${BASE_PATH}/backup/wikipedia",
+      "check_interval": 30,
+      "max_backups": 3
+    }
+  ],
   "logging": {
     "level": "INFO",
     "file": "${BASE_PATH}/logs/wikipedia.log",

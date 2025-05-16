@@ -36,3 +36,7 @@ This section describes standards for shell scripts
 * Assume PODMAN over DOCKER
 * Assume prometheus for metric
 * Assume promtail and Loki for log collection
+
+## Source Code management
+
+When making changes avoid making extensive changes at once, go step by step, find the path with last impact and balst radio and perform the change, and after that commit that change and test. If that is OK, then go to the next and so on so forth
