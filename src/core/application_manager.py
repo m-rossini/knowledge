@@ -150,20 +150,18 @@ class ApplicationManager:
         Returns:
             Exit code (0 for success, non-zero for failure)
         """
-        if hasattr(args, 'update_zim') and args.update_zim:
-            # Download all ZIM sources defined in the configuration
-            success = self.command_executor.download_sources(force_update=args.force_download)
-            return 0 if success else 1
-        
-        if hasattr(args, 'update_source') and args.update_source:
-            # Download a specific ZIM source by name
-            source_name = args.update_source
+        logger = logging.getLogger(__name__)
+        if self.command_executor is None:
+            logger.error(">>>> ApplicationManager::execute_command Command executor not initialized")
+            return 1
+        if hasattr(args, 'source') and args.source:
+            # Download a specific source by name
+            source_name = args.source
             success = self.command_executor.download_source(source_name, force_update=args.force_download)
             return 0 if success else 1
-        
-        # If no specific action was requested, just log a message
-        self.logger.info(">> ApplicationManager::execute_command No specific action requested. Use --help for available commands.")
-        return 0
+        # Default: download all sources
+        success = self.command_executor.download_sources(force_update=args.force_download)
+        return 0 if success else 1
     
     def run(self, args: argparse.Namespace) -> int:
         """

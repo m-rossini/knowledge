@@ -92,11 +92,10 @@ All dependencies are managed through the requirements.txt file. Never install in
 
 The system can be configured using the files in the `config/` directory:
 
-- `config.yaml`: Main configuration file (YAML format)
-- `config.json`: Alternative configuration file (JSON format)
+- `config.json`: Main configuration file (JSON format)
 
 Configuration parameters include:
-- Wikipedia ZIM file pattern and source URL
+- ZIM file patterns and source URLs
 - Storage and backup paths
 - Logging settings
 - Metrics collection settings (port, path)
@@ -104,14 +103,17 @@ Configuration parameters include:
 Example configuration (JSON):
 ```json
 {
-  "wikipedia": {
-    "zim_source_url": "https://download.kiwix.org/zim/wikipedia/",
-    "file_pattern": "wikipedia_en_all_maxi_[0-9]{4}-[0-9]{2}.zim",
-    "storage_path": "/path/to/knowledge/data/wikipedia",
-    "backup_path": "/path/to/knowledge/backup/wikipedia",
-    "check_interval": 30,
-    "max_backups": 3
-  },
+  "zim_sources": [
+    {
+      "name": "wikipedia",
+      "source_url": "https://download.kiwix.org/zim/wikipedia/",
+      "file_pattern": "wikipedia_en_all_maxi_[0-9]{4}-[0-9]{2}.zim",
+      "storage_path": "/path/to/knowledge/data/wikipedia",
+      "backup_path": "/path/to/knowledge/backup/wikipedia",
+      "check_interval": 30,
+      "max_backups": 3
+    }
+  ],
   "metrics": {
     "enabled": true,
     "port": 9091,
@@ -127,7 +129,7 @@ Example configuration (JSON):
 To start the knowledge archival system with default settings:
 
 ```bash
-python src/main.py --config config/config.yaml --update-wikipedia
+python src/main.py --config config/config.json
 ```
 
 ### Command-line Arguments
@@ -138,7 +140,6 @@ The application supports the following command-line arguments:
 --config PATH             Path to configuration file
 --log-dir PATH            Directory for log files
 --log-level LEVEL         Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
---update-wikipedia        Check for Wikipedia updates and download if available
 --force-download          Force download even if the file exists or is not newer
 ```
 

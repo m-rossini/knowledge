@@ -50,6 +50,8 @@ class ConfigManager:
                     
             self.logger.info(">> ConfigManager::_load_config Configuration loaded from %s", 
                            self.config_path)
+            
+            self.logger.debug("> ConfigManager::_load_config Configuration content: %s", self.config)
                 
         except Exception as e:
             self.logger.error(">>>> ConfigManager::_load_config Error loading configuration: %s", str(e))

@@ -14,6 +14,7 @@ CONTAINER_NAME="knowledge-container"
 IMAGE_NAME="knowledge-project:latest"
 PROJECT_ROOT="${HOME}/projetos/knowledge"
 METRICS_PORT=9091
+LOG_LEVEL="INFO"
 
 # Functions
 function log_info() {
@@ -40,6 +41,11 @@ function parse_arguments() {
                 log_info "Using custom metrics endpoint port: $METRICS_PORT"
                 shift 2
                 ;;
+            --log-level)
+                LOG_LEVEL="$2"
+                log_info "Using custom log level: $LOG_LEVEL"
+                shift 2
+                ;;
             --restart)
                 log_info "Restart flag enabled - will restart container if it exists"
                 RESTART_FLAG=true
@@ -54,6 +60,7 @@ function parse_arguments() {
                 echo "Usage: $0 [options]"
                 echo "Options:"
                 echo "  --metrics-port PORT     Set custom port for metrics endpoint (default: 9091)"
+                echo "  --log-level LEVEL       Set custom log level (default: INFO)"
                 echo "  --restart               Restart container if it exists (without this flag, exits if container exists)"
                 echo "  --force, -f             Force download even if version exists"
                 echo "  --help, -h              Show this help message"
@@ -118,7 +125,7 @@ function check_existing_container() {
 function run_container() {
     log_info "Starting container ${CONTAINER_NAME}"
     
-    # Command to run the container with additional arguments
+    # Pass LOG_LEVEL as an environment variable to the container
     container_cmd="podman run -d \
         --name \"${CONTAINER_NAME}\" \
         -v \"${PROJECT_ROOT}/data:/app/data:Z\" \
@@ -127,13 +134,14 @@ function run_container() {
         -v \"${PROJECT_ROOT}/config:/app/config:Z\" \
         -p \"${METRICS_PORT}:9091\" \
         -e \"BASE_PATH=/app\" \
+        -e \"LOG_LEVEL=${LOG_LEVEL}\" \
         \"${IMAGE_NAME}\""
     
     # Add any additional arguments to pass to the entrypoint
     if [[ ${#CONTAINER_ARGS[@]} -gt 0 ]]; then
         log_info "Passing arguments to container entrypoint: ${CONTAINER_ARGS[*]}"
         for arg in "${CONTAINER_ARGS[@]}"; do
-            container_cmd+=" \"$arg\""
+            container_cmd+=" $arg"
         done
     fi
     

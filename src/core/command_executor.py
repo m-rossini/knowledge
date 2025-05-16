@@ -28,6 +28,7 @@ class CommandExecutor:
         self.logger = logging.getLogger(__name__)
         self.config = config
         self.metrics_manager = metrics_manager
+        self.logger.info(">> CommandExecutor::__init__ Initialized with config: %s", config)
     
     def download_sources(self, force_update: bool = False) -> bool:
         """
@@ -43,6 +44,7 @@ class CommandExecutor:
         
         # Get the list of ZIM sources from configuration
         zim_sources = self.config.get("zim_sources", [])
+        self.logger.info(">> CommandExecutor::download_sources Loaded zim_sources from config: %s", zim_sources)
         
         if not zim_sources:
             self.logger.warning(">>> CommandExecutor::download_sources No ZIM sources configured")
@@ -54,6 +56,7 @@ class CommandExecutor:
         # Download each configured source
         for source_config in zim_sources:
             source_name = source_config.get("name")
+            self.logger.info(">> CommandExecutor::download_sources Will process source: %s", source_name)
             
             if not source_name:
                 self.logger.warning(">>> CommandExecutor::download_sources Source missing name, skipping")
@@ -95,6 +98,7 @@ class CommandExecutor:
         
         # Get the list of ZIM sources from configuration
         zim_sources = self.config.get("zim_sources", [])
+        self.logger.info(">> CommandExecutor::download_source Loaded zim_sources from config: %s", zim_sources)
         
         if not zim_sources:
             self.logger.error(">>>> CommandExecutor::download_source No ZIM sources configured")
@@ -103,6 +107,7 @@ class CommandExecutor:
         # Find the requested source
         source_config = None
         for config in zim_sources:
+            self.logger.info(">> CommandExecutor::download_source Checking source: %s", config.get("name"))
             if config.get("name") == source_name:
                 source_config = config
                 break

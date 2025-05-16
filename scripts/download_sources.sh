@@ -90,19 +90,24 @@ function create_directories() {
 
 function download_source() {
     log_info "Downloading knowledge sources"
+    log_info "Using config file: ${CONFIG_FILE}"
+    log_info "Log directory: ${LOG_DIR}"
+    if [ -n "${SOURCE_NAME}" ]; then
+        log_info "Requested source: ${SOURCE_NAME}"
+    else
+        log_info "No specific source requested; all sources in config will be processed"
+    fi
     
     # Build command based on arguments
-    local cmd="cd \"${BASE_PATH}\" && PYTHONPATH=\"${BASE_PATH}\" python3 \"${BASE_PATH}/src/main.py\" --config \"${CONFIG_FILE}\" --log-dir \"${LOG_DIR}\""
+    local cmd="cd \"${BASE_PATH}\" && PYTHONPATH=\"${BASE_PATH}\" python3 \"${BASE_PATH}/src/main.py\" --config \"${CONFIG_FILE}\" --log-dir \"${LOG_DIR}\" --log-level DEBUG"
     
-    if [ -z "${SOURCE_NAME}" ]; then
-        # Download all sources
-        cmd="${cmd} --update-zim"
-    else
-        # Download specific source
-        cmd="${cmd} --update-source \"${SOURCE_NAME}\""
+    # If a specific source is requested, pass it as a generic --source argument
+    if [ -n "${SOURCE_NAME}" ]; then
+        cmd="${cmd} --source \"${SOURCE_NAME}\""
     fi
     
     if [ "${FORCE_DOWNLOAD}" = true ]; then
+        log_info "Force download is enabled"
         cmd="${cmd} --force-download"
     fi
     

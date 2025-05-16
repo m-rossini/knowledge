@@ -58,8 +58,8 @@ EXPOSE 9091
 # Set BASE_PATH for all scripts and apps
 ENV BASE_PATH=/app
 
-# Set the entrypoint to the download_sources.sh script
-ENTRYPOINT ["/app/scripts/download_sources.sh"]
+# Set the entrypoint to the download_sources.sh script and always pass --log-level from the environment
+ENTRYPOINT ["/app/scripts/download_sources.sh", "--log-level", "${LOG_LEVEL}"]
 
 # Default command (can be overridden)
 CMD []
