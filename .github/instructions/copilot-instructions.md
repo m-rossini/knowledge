@@ -49,4 +49,8 @@ Assumptions about the current environment, in the case you do not know the answe
 
 ## Source Code management
 
+<<<<<<< HEAD:.github/instructions/copilot-instructions.md
 * When making changes avoid making extensive changes at once, go step by step, find the path with least impact and blast radius and perform the change, and after that commit that change and test. If that is OK, then go to the next and so on so forth
+=======
+* When making changes avoid making extensive changes at once, go step by step, find the path with last impact and balst radio and perform the change, and after that commit that change and test. If that is OK, then go to the next and so on so forth
+>>>>>>> c0656dd (Dev env (#8)):.github/copilot-instructions.md
