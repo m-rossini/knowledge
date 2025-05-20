@@ -15,8 +15,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libzim-dev \
     pkg-config \
     zsh \
+    openssh-client \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Add ll alias to zsh for all users
+RUN echo 'alias ll="ls -alF --color=auto"' >> /etc/zsh/zshrc
 
 # Create base structure with minimal layer count
 RUN mkdir -p /app/data/wikipedia \
