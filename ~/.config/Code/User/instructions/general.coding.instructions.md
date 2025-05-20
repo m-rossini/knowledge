@@ -5,7 +5,7 @@ applyTo: '**'
 # Development SLDC Standards
 These file describes development coding and design standards.
 
-* When thinking of answers, clarify any doubts prefereble with yes or no type of questions. Do not go wild with solutions, ask always.
+* When thinking of answers, clarify any doubts preferably with yes or no type of questions. Do not go wild with solutions, ask always.
 * Always create git repositories named as 'main'
 
 ## General Standards#
