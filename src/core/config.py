@@ -8,7 +8,7 @@ import os
 import re
 import json
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 
 class ConfigManager:
@@ -68,15 +68,16 @@ class ConfigManager:
         Returns:
             Content with environment variables substituted
         """
-        # Define pattern for ${VAR} format
         pattern = r'\${([a-zA-Z0-9_]+)}'
         
         # Function to replace matches with environment variable values
-        def replace_var(match):
+        def replace_var(match: re.Match[str]) -> str:
             var_name = match.group(1)
             var_value = os.environ.get(var_name, '')
             if not var_value:
-                self.logger.warning(">>> ConfigManager::_substitute_env_vars Environment variable %s not found", var_name)
+                self.logger.warning(
+                    ">>> ConfigManager::_substitute_env_vars Environment variable %s not found", var_name
+                )
             return var_value
         
         # Perform substitution
@@ -96,7 +97,7 @@ class ConfigManager:
         if "." in key:
             # Handle nested keys with dot notation
             parts = key.split(".")
-            current = self.config
+            current: Any = self.config  # Explicitly annotate type for type checker
             for part in parts:
                 if isinstance(current, dict) and part in current:
                     current = current[part]
@@ -122,7 +123,7 @@ class ConfigManager:
         Returns:
             The nested configuration value or default if not found
         """
-        current = self.config
+        current: Any = self.config
         for key in keys:
             if isinstance(current, dict) and key in current:
                 current = current[key]

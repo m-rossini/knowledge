@@ -7,6 +7,8 @@ import os
 import logging
 from typing import Dict, Any
 
+from src.core.config import ConfigManager
+from src.metrics.prometheus_metrics import MetricsManager
 from src.sources.zim.connector import ZimConnector
 from src.sources.zim.implementations.zim_metadata_manager import ZimMetadataManager
 from src.sources.zim.implementations.zim_download_manager import ZimDownloadManager
@@ -17,7 +19,11 @@ class ZimFactory:
     """Factory for creating ZIM connector and its components."""
     
     @staticmethod
-    def create_connector_from_config(config, metrics_manager, source_config: Dict[str, Any]):
+    def create_connector_from_config(
+        config: ConfigManager,
+        metrics_manager: MetricsManager,
+        source_config: Dict[str, Any]
+    ) -> ZimConnector:
         """
         Create a fully configured ZimConnector from a source configuration.
         
@@ -81,7 +87,12 @@ class ZimFactory:
         )
     
     @staticmethod
-    def create_connector(config, metrics_manager, source_name: str = "zim", config_prefix: str = "zim"):
+    def create_connector(
+        config: ConfigManager,
+        metrics_manager: MetricsManager,
+        source_name: str = "zim",
+        config_prefix: str = "zim"
+    ) -> ZimConnector:
         """
         Create a fully configured ZimConnector with all its components.
         
