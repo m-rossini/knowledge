@@ -1,11 +1,11 @@
 # Development SLDC Standards
 These file describes development coding and design standards.
 
-* When thiking for answers, clarify any doubts prefereble with yes or no type of questions. Do not go wild with solutions, ask always.
+* When thinking for answers, clarify any doubts preferably with yes or no type of questions. Do not go wild with solutions, ask always.
 * Always create git repositories named as 'main'
 
-## General Standards#
-This section describes general coding standards, not specif to any language
+## General Standards
+This section describes general coding standards, not specific to any language
 
 * Use markdown for documentation
 * Use markdown for README
@@ -13,9 +13,9 @@ This section describes general coding standards, not specif to any language
 * Try to follow SOLID Principles when using OOP
 * Declare variable near where they going to be used, try to minimize their scope
 * Give meaningful variable names
-* Use desgin pattern when needed, but only if needed.
+* Use design pattern when needed, but only if needed.
 * Metrics are first class citizens and should be there from start, we should use prometheus for that
-* Qhenever possible avoid global variable
+* Whenever possible avoid global variable
 
 
 ## Python Standards
@@ -27,7 +27,7 @@ This section describes standards for python code
 * Maintain import order according to python standards
 * Format code according top PEP8
 * Use modules to keep different concerns apart, to the point I can replace them, so low coupling and high cohesion
-* Avoid external libraries if possible, pydatantic, dataclasses, pandas and numpy are ok
+* Avoid external libraries if possible, pydantic, dataclasses, pandas and numpy are ok
 
 ## Shell Script Standards
 This section describes standards for shell scripts
