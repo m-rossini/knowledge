@@ -1,6 +1,13 @@
 # Development SLDC Standards
 These file describes development coding and design standards.
 
+## General Standards
+This section describes general coding standards, not specific to any language
+* When thiking for answers, clarify any doubts prefereble with yes or no type of questions. Do not go wild with solutions, ask always.
+* Always create git repositories named as 'main'
+
+## General Standards#
+This section describes general coding standards, not specif to any language
 * When thinking for answers, clarify any doubts preferably with yes or no type of questions. Do not go wild with solutions, ask always.
 * Always create git repositories named as 'main'
 
