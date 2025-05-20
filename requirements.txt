@@ -4,3 +4,4 @@ libzim>=3.3.0
 prometheus_client
 schedule>=1.2.1
 PyYAML>=6.0.1
+pytest>=8.2.0
