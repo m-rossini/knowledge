@@ -1,9 +1,11 @@
+---
+applyTo: '**'
+---
+
 # Development SLDC Standards
 These file describes development coding and design standards.
 
-## General Standards
-This section describes general coding standards, not specific to any language
-* When thinking for answers, clarify any doubts preferably with yes or no type of questions. Do not go wild with solutions, ask always.
+* When thinking of answers, clarify any doubts preferably with yes or no type of questions. Do not go wild with solutions, ask always.
 * Always create git repositories named as 'main'
 
 ## General Standards
@@ -19,6 +21,7 @@ This section describes general coding standards, not specific to any language
 * Metrics are first class citizens and should be there from start, we should use prometheus for that
 * Whenever possible avoid global variable
 
+
 ## Python Standards
 This section describes standards for python code
 
@@ -27,8 +30,13 @@ This section describes standards for python code
 * Specially ensure Single Principle of responsibility and Interface Segregation.
 * Maintain import order according to python standards
 * Format code according top PEP8
+* Use type hints for all functions and methods
 * Use modules to keep different concerns apart, to the point I can replace them, so low coupling and high cohesion
-* Avoid external libraries if possible, pydantic, dataclasses, pandas and numpy are ok
+* Avoid external libraries if possible, pydatantic, dataclasses, pandas and numpy are fine ecouraged to be used
+* Use pytest for testing, and use pytest-cov for coverage
+* Use pytest-mock for mocking
+* Use pytest-asyncio for async testing
+* Use pytest-mypy for mypy testing
 
 ## Shell Script Standards
 This section describes standards for shell scripts
@@ -49,4 +57,5 @@ Assumptions about the current environment, in the case you do not know the answe
 
 
 ## Source Code management
+
 * When making changes avoid making extensive changes at once, go step by step, find the path with last impact and balst radio and perform the change, and after that commit that change and test. If that is OK, then go to the next and so on so forth
