@@ -7,7 +7,7 @@ Handles initialization, configuration and orchestration of components.
 import logging
 import argparse
 from pathlib import Path
-from typing import Dict, Any, Optional, Tuple
+# from typing import Dict, Any, Optional, Tuple
 
 from src.core.config import ConfigManager
 from src.core.logging_setup import setup_logging
@@ -73,16 +73,26 @@ class ApplicationManager:
         Returns:
             True if metrics were initialized successfully, False otherwise
         """
+        if self.config is None:
+            if self.logger:
+                self.logger.error(
+                    ">>>> ApplicationManager::initialize_metrics Configuration not loaded, cannot initialize metrics"
+                )
+            return False
         try:
             metrics_port = self.config.get("metrics.port", 9090)
             self.metrics_manager = MetricsManager(metrics_port)
             if self.logger:
-                self.logger.info(">> ApplicationManager::initialize_metrics Metrics initialized on port %d", metrics_port)
+                self.logger.info(
+                    ">> ApplicationManager::initialize_metrics Metrics initialized on port %d", metrics_port
+                )
             return True
             
         except Exception as e:
             if self.logger:
-                self.logger.error(">>>> ApplicationManager::initialize_metrics Error initializing metrics: %s", str(e))
+                self.logger.error(
+                    ">>>> ApplicationManager::initialize_metrics Error initializing metrics: %s", str(e)
+                )
             return False
     
     def initialize_components(self) -> bool:
@@ -92,16 +102,26 @@ class ApplicationManager:
         Returns:
             True if components were initialized successfully, False otherwise
         """
+        if self.config is None or self.metrics_manager is None:
+            if self.logger:
+                self.logger.error(
+                    ">>>> ApplicationManager::initialize_components Missing config or metrics_manager, cannot initialize components"
+                )
+            return False
         try:
             # Initialize command executor
             self.command_executor = CommandExecutor(self.config, self.metrics_manager)
             if self.logger:
-                self.logger.info(">> ApplicationManager::initialize_components Components initialized successfully")
+                self.logger.info(
+                    ">> ApplicationManager::initialize_components Components initialized successfully"
+                )
             return True
             
         except Exception as e:
             if self.logger:
-                self.logger.error(">>>> ApplicationManager::initialize_components Error initializing components: %s", str(e))
+                self.logger.error(
+                    ">>>> ApplicationManager::initialize_components Error initializing components: %s", str(e)
+                )
             return False
     
     def initialize(self, args: argparse.Namespace) -> bool:
@@ -114,7 +134,6 @@ class ApplicationManager:
         Returns:
             True if initialization was successful, False otherwise
         """
-        # Setup logging first
         log_levels = {
             "DEBUG": logging.DEBUG,
             "INFO": logging.INFO,
@@ -123,21 +142,21 @@ class ApplicationManager:
             "CRITICAL": logging.CRITICAL
         }
         self.setup_logging(args.log_dir, log_levels[args.log_level])
-        
-        self.logger.info(">> ApplicationManager::initialize Starting Knowledge Archival System")
-        
+        if self.logger:
+            self.logger.info(
+                ">> ApplicationManager::initialize Starting Knowledge Archival System"
+            )
+        else:
+            return False
         # Load configuration
         if not self.load_configuration(args.config):
             return False
-        
         # Initialize metrics
         if not self.initialize_metrics():
             return False
-        
         # Initialize components
         if not self.initialize_components():
             return False
-        
         return True
     
     def execute_command(self, args: argparse.Namespace) -> int:

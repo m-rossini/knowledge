@@ -7,7 +7,6 @@ Configures logging with proper formatting and file rotation.
 import os
 import logging
 import logging.handlers
-from typing import Optional
 
 def setup_logging(log_dir: str, log_level: int = logging.INFO, 
                   log_filename: str = "knowledge_archive.log",
@@ -57,7 +56,7 @@ def setup_logging(log_dir: str, log_level: int = logging.INFO,
     # Log startup message
     logging.info(">> LoggingSetup::setup_logging Logging configured, writing to %s", log_path)
 
-def get_logger(name):
+def get_logger(name: str) -> logging.Logger:
     """
     Get a logger with the given name, properly formatted according to standards
     

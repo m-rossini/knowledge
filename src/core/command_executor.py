@@ -5,7 +5,6 @@ Handles execution of specific commands.
 """
 
 import logging
-from typing import Dict, Any, Optional, List, Union
 
 from src.core.config import ConfigManager
 from src.metrics.prometheus_metrics import MetricsManager

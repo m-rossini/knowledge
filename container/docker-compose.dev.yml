@@ -8,6 +8,8 @@ services:
     container_name: knowledge-dev
     volumes:
       - ..:/app:Z
+      - ${HOME}/.config/Code/User/instructions:${HOME}/.config/Code/User/instructions:Z
+      - ${HOME}/.config/Code/User/prompts:${HOME}/.config/Code/User/prompts:Z
     working_dir: /app
     command: ["zsh"]
     tty: true
