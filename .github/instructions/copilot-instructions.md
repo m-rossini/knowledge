@@ -29,8 +29,6 @@ This section describes standards for python code
 * Format code according top PEP8
 * Use modules to keep different concerns apart, to the point I can replace them, so low coupling and high cohesion
 * Avoid external libraries if possible, pydantic, dataclasses, pandas and numpy are ok
-* Use pytest for testing, and use pytest-cov for coverage
-* Always run tests after a change before commiting
 
 ## Shell Script Standards
 This section describes standards for shell scripts
