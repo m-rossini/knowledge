@@ -99,12 +99,18 @@ class ZimContentExtractor:
         except AttributeError: # Handles if zim is None and zim.File is accessed
              logger.error("libzim is not available or zim.File is not callable (AttributeError).")
              return []
-        except Exception as e: # Catching other generic libzim errors for opening
+        except (IOError, RuntimeError) as e:  # Catching specific errors related to file operations
             logger.error(
                 "Failed to open ZIM file '%s'. Error: %s: %s",
                 self.zim_file_path, type(e).__name__, e
             )
             return []
+        except Exception as e:  # Log and re-raise unexpected exceptions
+            logger.exception(
+                "An unexpected error occurred while opening ZIM file '%s'. Re-raising exception.",
+                self.zim_file_path
+            )
+            raise
 
         logger.info("Successfully opened ZIM file: %s (UUID: %s, Articles: %d)",
                     self.zim_file_path, zimfile.uuid, zimfile.article_count)
